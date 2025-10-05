@@ -1,0 +1,10 @@
+version: '3.9'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ciblorgasport-front
+    ports:
+      - "1002:8080"
