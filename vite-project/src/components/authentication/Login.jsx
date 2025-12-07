@@ -1,32 +1,33 @@
-import React, { useState } from 'react';
-import { register } from '../api/auth';
+import React, { useState, useEffect } from 'react';
+import { login } from '../../api/auth';
 
-function Register({ onRegistered }) {
-  const [username, setUsername] = useState('');
+function Login({ onLogin, prefilledUsername = '' }) {
+  const [username, setUsername] = useState(prefilledUsername);
   const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    setUsername(prefilledUsername);
+  }, [prefilledUsername]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage('');
     setError('');
     try {
-      await register(username, password);
-      setMessage('Compte créé, vous pouvez vous connecter.');
-      if (onRegistered) {
-        onRegistered(username);
+      const data = await login(username, password); // { token }
+      localStorage.setItem('token', data.token);
+      if (onLogin) {
+        onLogin(data.token, username);
       }
     } catch (err) {
-      setError(err.message || 'Erreur lors de la création du compte');
+      setError(err.message || 'Erreur de connexion');
     }
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <h2 style={{ marginBottom: '1.2rem' }}>Créer un compte</h2>
+      <h2 style={{ marginBottom: '1.2rem' }}>Connexion CiblOrgaSport</h2>
       {error && <p className="text-error">{error}</p>}
-      {message && <p className="text-success">{message}</p>}
 
       <div className="form-group">
         <label>Nom d&apos;utilisateur</label>
@@ -34,7 +35,7 @@ function Register({ onRegistered }) {
           type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          placeholder="Choisissez un identifiant"
+          placeholder="Ex : suzanne, leon, arthur..."
         />
       </div>
 
@@ -44,15 +45,15 @@ function Register({ onRegistered }) {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Choisissez un mot de passe"
+          placeholder="Votre mot de passe"
         />
       </div>
 
       <button type="submit" className="btn-primary">
-        S&apos;inscrire
+        Se connecter
       </button>
     </form>
   );
 }
 
-export default Register;
+export default Login;

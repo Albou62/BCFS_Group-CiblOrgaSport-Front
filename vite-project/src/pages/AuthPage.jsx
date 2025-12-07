@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Login from '../components/Login.jsx';
-import Register from '../components/Register.jsx';
+import Login from '../components/authentication/Login.jsx';
+import Register from '../components/authentication/Register.jsx';
 
 function AuthPage({ setToken, setUsername }) {
 const [showRegister, setShowRegister] = useState(false);
