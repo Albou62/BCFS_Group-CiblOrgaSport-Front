@@ -1,8 +1,13 @@
+// src/App.jsx
 import React, { useState } from 'react';
 import { Routes, Route, Link, useNavigate, Navigate } from 'react-router-dom';
 import Accueil from './pages/Accueil.jsx';
 import AuthPage from './pages/AuthPage.jsx';
 import SpectateurPage from './pages/SpectateurPage.jsx';
+import ResponsablePage from './pages/ResponsablePage.jsx';
+import SportifPage from './pages/SportifPage.jsx';
+import CommissairePage from './pages/CommissairePage.jsx';
+import VolontairePage from './pages/VolontairePage.jsx';
 
 function Header() {
   return (
@@ -42,6 +47,7 @@ function App() {
     localStorage.removeItem('token');
     setToken('');
     setUsername('');
+    navigate('/auth');
   };
 
   return (
@@ -55,14 +61,56 @@ function App() {
             <AuthPage
               setToken={setToken}
               setUsername={setUsername}
-              navigate={navigate}
             />
           }
         />
         <Route
           path="/spectateur"
           element={
-            <SpectateurPage token={token} username={username} onLogout={logout} />
+            <SpectateurPage
+              token={token}
+              username={username}
+              onLogout={logout}
+            />
+          }
+        />
+        <Route
+          path="/responsable"
+          element={
+            <ResponsablePage
+              token={token}
+              onLogout={logout}
+            />
+          }
+        />
+        <Route
+          path="/sportif"
+          element={
+            <SportifPage
+              token={token}
+              username={username}
+              onLogout={logout}
+            />
+          }
+        />
+        <Route
+          path="/commissaire"
+          element={
+            <CommissairePage
+              token={token}
+              username={username}
+              onLogout={logout}
+            />
+          }
+        />
+        <Route
+          path="/volontaire"
+          element={
+            <VolontairePage
+              token={token}
+              username={username}
+              onLogout={logout}
+            />
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />

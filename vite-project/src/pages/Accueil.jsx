@@ -23,8 +23,6 @@ s’adresse aux sportifs, spectateurs, volontaires, commissaires et
 responsables OrgaEvLille.
 </p>
 </div>
-
-text
     <div
       style={{
         display: 'grid',
