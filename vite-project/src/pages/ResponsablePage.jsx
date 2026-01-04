@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 
-const API_URL = 'http://localhost:8080';
+const API_URL = 'http://localhost:1001';
 
 function ResponsablePage({ token, onLogout }) {
   const [users, setUsers] = useState([]);

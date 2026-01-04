@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Login from '../components/Login.jsx';
 import Register from '../components/Register.jsx';
 
-const API_URL = 'http://localhost:8080';
+const API_URL = 'http://localhost:1001';
 
 function AuthPage({ setToken, setUsername }) {
   const [showRegister, setShowRegister] = useState(false);

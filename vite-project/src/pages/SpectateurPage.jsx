@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 
-const API_URL = 'http://localhost:8080';
+const API_URL = 'http://localhost:1001';
 
 function SpectateurPage({ token, username, onLogout }) {
 const [hello, setHello] = useState('');
