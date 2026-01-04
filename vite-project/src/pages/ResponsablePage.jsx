@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 
-const API_URL = 'http://localhost:1001';
+const API_URL = 'https://bcfs-group-ciblorgasport-back.onrender.com';
 
 function ResponsablePage({ token, onLogout }) {
   const [users, setUsers] = useState([]);
