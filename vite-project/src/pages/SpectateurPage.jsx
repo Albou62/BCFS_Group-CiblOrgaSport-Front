@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 
-const API_URL = 'http://localhost:1001';
+const API_URL = 'https://bcfs-group-ciblorgasport-back.onrender.com';
 
 function SpectateurPage({ token, username, onLogout }) {
 const [hello, setHello] = useState('');
