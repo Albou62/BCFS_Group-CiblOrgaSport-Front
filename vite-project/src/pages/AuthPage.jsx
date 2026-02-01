@@ -1,10 +1,9 @@
-// src/pages/AuthPage.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Login from '../components/Login.jsx';
 import Register from '../components/Register.jsx';
 
-const API_URL = 'http://localhost:8080';
+const API_URL = import.meta.env.VITE_API_URL;
 
 function AuthPage({ setToken, setUsername }) {
   const [showRegister, setShowRegister] = useState(false);
@@ -19,9 +18,8 @@ function AuthPage({ setToken, setUsername }) {
       navigate('/spectateur');
       return;
     }
-    const me = await res.json(); // { id, username, role }
+    const me = await res.json();
 
-    // on mémorise aussi le username côté App
     setUsername(me.username);
 
     switch (me.role) {
@@ -45,7 +43,6 @@ function AuthPage({ setToken, setUsername }) {
   const handleLogin = async (newToken, usernameFromForm) => {
     setToken(newToken);
     localStorage.setItem('token', newToken);
-    // username définitif viendra de /me
     await fetchMeAndRedirect(newToken);
   };
 
