@@ -3,8 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 
 // URLs locales des microservices (Docker)
-const AUTH_API_URL = 'http://localhost:1001';
-const COMP_API_URL = 'http://localhost:1003';
+const AUTH_API_URL = 'http://localhost:8080';
+const COMP_API_URL = 'http://localhost:8080';
 
 function ResponsablePage({ token, onLogout }) {
   const [users, setUsers] = useState([]);

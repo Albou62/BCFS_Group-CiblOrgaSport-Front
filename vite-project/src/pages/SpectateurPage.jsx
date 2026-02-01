@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 
 // URLs locales
-const AUTH_API_URL = 'http://localhost:1001';
-const COMP_API_URL = 'http://localhost:1003';
+const AUTH_API_URL = 'http://localhost:8080';
+const COMP_API_URL = 'http://localhost:8080';
 
 function SpectateurPage({ token, username, onLogout }) {
   const [hello, setHello] = useState('');
