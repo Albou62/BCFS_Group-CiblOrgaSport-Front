@@ -1,86 +1,34 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 
 function Accueil() {
-return (
-<div className="app-container" style={{ alignItems: 'center' }}>
-<div
-style={{
-width: '100%',
-maxWidth: '900px',
-}}
->
-<div className="hero">
-<h1>CiblOrgaSport</h1>
-<p className="hero-subtitle">
-Plateforme des championnats d’Europe de Natation 2026
-</p>
-<p className="hero-text">
-CiblOrgaSport centralise les informations des compétitions : programme,
-résultats, sécurité, notifications et suivi en temps réel. L’application
-s’adresse aux sportifs, spectateurs, volontaires, commissaires et
-responsables OrgaEvLille.
-</p>
-</div>
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-        gap: '1rem',
-      }}
-    >
-      <div
-        style={{
-          background: '#ffffff',
-          borderRadius: '0.9rem',
-          padding: '0.9rem 1rem',
-          boxShadow: '0 6px 18px rgba(15, 23, 42, 0.08)',
-        }}
-      >
-        <div style={{ fontSize: '1.2rem' }}>📅</div>
-        <div style={{ fontWeight: 600, fontSize: '0.95rem', marginTop: '0.3rem' }}>
-          Programme unifié
-        </div>
-        <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
-          Horaires, lieux et sessions regroupés pour tous les publics.
-        </div>
-      </div>
-      <div
-        style={{
-          background: '#ffffff',
-          borderRadius: '0.9rem',
-          padding: '0.9rem 1rem',
-          boxShadow: '0 6px 18px rgba(15, 23, 42, 0.08)',
-        }}
-      >
-        <div style={{ fontSize: '1.2rem' }}>🎟️</div>
-        <div style={{ fontWeight: 600, fontSize: '0.95rem', marginTop: '0.3rem' }}>
-          Espace spectateur
-        </div>
-        <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
-          Stockage des billets et informations pratiques pour les spectateurs.
-        </div>
-      </div>
-      <div
-        style={{
-          background: '#ffffff',
-          borderRadius: '0.9rem',
-          padding: '0.9rem 1rem',
-          boxShadow: '0 6px 18px rgba(15, 23, 42, 0.08)',
-        }}
-      >
-        <div style={{ fontSize: '1.2rem' }}>🔔</div>
-        <div style={{ fontWeight: 600, fontSize: '0.95rem', marginTop: '0.3rem' }}>
-          Notifications ciblées
-        </div>
-        <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
-          Résultats, sécurité, événements festifs autour des sites.
+  return (
+    <div className="app-container">
+      <div style={{ width: '100%', maxWidth: '900px', textAlign:'center', marginTop:'4rem' }}>
+        <h1 style={{fontSize:'3rem', marginBottom:'1rem', color:'#1e3a8a'}}>CiblOrgaSport 2026</h1>
+        <p style={{fontSize:'1.2rem', color:'#475569', marginBottom:'3rem'}}>
+          La plateforme officielle des Championnats d'Europe de Natation.
+        </p>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', textAlign:'left' }}>
+          <div className="panel">
+            <div style={{ fontSize: '2rem' }}>📅</div>
+            <h3>Programme Unifié</h3>
+            <p style={{color:'#64748b'}}>Suivez les compétitions en temps réel, horaires et résultats.</p>
+          </div>
+          <div className="panel">
+            <div style={{ fontSize: '2rem' }}>🎟️</div>
+            <h3>Billetterie & Accès</h3>
+            <p style={{color:'#64748b'}}>Gérez vos E-Billets et trouvez votre chemin vers les stades.</p>
+          </div>
+          <div className="panel">
+            <div style={{ fontSize: '2rem' }}>🛡️</div>
+            <h3>Sécurité & Alertes</h3>
+            <p style={{color:'#64748b'}}>Restez informé des incidents et notifications de sécurité.</p>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
-);
+  );
 }
 
 export default Accueil;

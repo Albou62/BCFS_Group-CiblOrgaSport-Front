@@ -1,47 +1,60 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({ iconUrl: icon, shadowUrl: iconShadow, iconSize: [25, 41], iconAnchor: [12, 41] });
+L.Marker.prototype.options.icon = DefaultIcon;
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 function SportifPage({ token, onLogout, username }) {
-  // --- MOCK DONNÉES ---
-  const [schedule] = useState([
-    {
-      id: 1,
-      epreuve: '200m 4 Nages (Séries)',
-      lieu: 'Centre Aquatique - Bassin Compétition',
-      heure_convocation: '08:30',
-      heure_debut: '10:00',
-      statut: 'À venir',
+  // On remplace les données statiques par un tableau vide au départ
+  const [schedule, setSchedule] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Données de démo pour les résultats (Car pas encore géré en base pour l'athlète spécifique)
+  const [results] = useState([{ id: 10, epreuve: '100m Papillon', temps: '51.20s' }]);
+  const [docs, setDocs] = useState({ passeport: 'Manquant', certificat: 'Manquant' });
+
+  // --- RECUPERATION DONNEES BACK-END ---
+  useEffect(() => {
+    if (token) {
+        const fetchSchedule = async () => {
+            try {
+                // 1. On récupère les compétitions
+                const resComp = await fetch(`${API_URL}/api/competitions`, { headers: { Authorization: `Bearer ${token}` } });
+                const comps = await resComp.json();
+                
+                let mySchedule = [];
+                // 2. On récupère toutes les épreuves
+                await Promise.all(comps.map(async (c) => {
+                    const r = await fetch(`${API_URL}/api/competitions/${c.id}/epreuves`, { headers: { Authorization: `Bearer ${token}` } });
+                    if(r.ok) {
+                        const eps = await r.json();
+                        // Ici, on pourrait filtrer uniquement les épreuves de l'athlète si le back le permettait
+                        // Pour l'instant on affiche tout comme "Programme prévisionnel"
+                        mySchedule = [...mySchedule, ...eps.map(e => ({
+                            id: e.id,
+                            epreuve: e.name,
+                            heure: new Date(e.horaireAthletes).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                            lieu: c.name // On utilise le nom de la compet comme lieu
+                        }))];
+                    }
+                }));
+                setSchedule(mySchedule);
+            } catch (error) {
+                console.error("Erreur chargement planning", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchSchedule();
     }
-  ]);
-
-  const [results] = useState([
-    { id: 10, epreuve: '100m Papillon', temps: '51.20s', rang: '2ème', date: '04/02/2026' }
-  ]);
-
-  // --- GESTION DOCUMENTS ---
-  const [documents, setDocuments] = useState({
-    passeport: { file: null, status: 'Manquant' },
-    certificat: { file: null, status: 'Manquant' }
-  });
-
-  const handleFileChange = (type, e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setDocuments(prev => ({
-        ...prev,
-        [type]: { file: file, status: 'En attente' }
-      }));
-    }
-  };
-
-  const getStatusBadge = (status) => {
-    switch(status) {
-        case 'Validé': return <span className="badge-success">Validé ✅</span>;
-        case 'Refusé': return <span className="badge-warning" style={{background:'#fee2e2', color:'#991b1b'}}>Refusé ❌</span>;
-        case 'En attente': return <span className="badge-secondary" style={{background:'#fef3c7', color:'#92400e'}}>En examen ⏳</span>;
-        default: return <span className="badge-secondary">À envoyer 📤</span>;
-    }
-  };
+  }, [token]);
 
   if (!token) return <Navigate to="/auth" replace />;
 
@@ -51,86 +64,56 @@ function SportifPage({ token, onLogout, username }) {
         <div className="spectator-header">
           <div className="spectator-header-left">
             <h1>Espace Sportif</h1>
-            <p>Bienvenue {username || 'Athlète'}. Préparez vos prochaines courses.</p>
+            <div style={{background:'#dcfce7', padding:'5px 10px', borderRadius:'20px', color:'#166534', fontSize:'0.85rem', display:'inline-block', marginTop:'5px'}}>
+               📡 Traçage GPS Actif (Conformité Charte)
+            </div>
           </div>
-          <div className="spectator-header-right">
-             {username && <span>{username} · <span style={{ opacity: 0.8 }}>Athlète</span></span>}
-            <button className="btn-secondary" onClick={onLogout}>Se déconnecter</button>
-          </div>
+          <div className="spectator-header-right">{username} <button className="btn-secondary" onClick={onLogout}>Déconnexion</button></div>
         </div>
 
-        <div className="spectator-main">
-          
-          {/* COLONNE GAUCHE : DOCUMENTS */}
-          <div className="panel" style={{flex: 1}}>
-            <h2 className="panel-title">🪪 Dossier Administratif</h2>
-            <p className="panel-subtitle">Documents requis pour l'accréditation.</p>
-            
-            <div style={{marginTop:'1rem'}}>
-                {/* PASSEPORT */}
-                <div style={{padding:'1rem', border:'1px solid #e5e7eb', borderRadius:'8px', marginBottom:'1rem'}}>
-                    <div style={{display:'flex', justifyContent:'space-between', marginBottom:'0.5rem'}}>
-                        <strong>Passeport / CNI</strong>
-                        {getStatusBadge(documents.passeport.status)}
+        <div className="spectator-main-full">
+            <div style={{display:'flex', gap:'1.5rem', flexWrap:'wrap'}}>
+                
+                {/* DOCS */}
+                <div className="panel" style={{flex:1}}>
+                    <h2 className="panel-title">🪪 Administratif</h2>
+                    <div style={{marginBottom:'1rem', padding:'10px', border:'1px solid #eee', borderRadius:'6px'}}>
+                        <div style={{display:'flex', justifyContent:'space-between'}}><strong>Passeport</strong> <span className="badge-warning">{docs.passeport}</span></div>
+                        <input type="file" onChange={()=>setDocs({...docs, passeport:'En attente'})} />
                     </div>
-                    {documents.passeport.status !== 'Validé' && (
-                        <input type="file" onChange={(e) => handleFileChange('passeport', e)} accept=".pdf,.jpg,.png" />
-                    )}
-                    {documents.passeport.file && <div style={{fontSize:'0.8rem', marginTop:'0.3rem', color:'#666'}}>Fichier : {documents.passeport.file.name}</div>}
-                </div>
-
-                {/* CERTIFICAT MÉDICAL */}
-                <div style={{padding:'1rem', border:'1px solid #e5e7eb', borderRadius:'8px'}}>
-                    <div style={{display:'flex', justifyContent:'space-between', marginBottom:'0.5rem'}}>
-                        <strong>Certificat Médical</strong>
-                        {getStatusBadge(documents.certificat.status)}
+                    <div style={{padding:'10px', border:'1px solid #eee', borderRadius:'6px'}}>
+                        <div style={{display:'flex', justifyContent:'space-between'}}><strong>Certificat</strong> <span className="badge-warning">{docs.certificat}</span></div>
+                        <input type="file" onChange={()=>setDocs({...docs, certificat:'En attente'})} />
                     </div>
-                    {documents.certificat.status !== 'Validé' && (
-                        <input type="file" onChange={(e) => handleFileChange('certificat', e)} accept=".pdf,.jpg,.png" />
+                </div>
+
+                {/* PLANNING & CARTE */}
+                <div className="panel" style={{flex:2}}>
+                    <h2 className="panel-title">📅 Planning & Zones</h2>
+                    
+                    {loading ? <p>Chargement du planning...</p> : (
+                        schedule.length > 0 ? schedule.map(s => (
+                            <div key={s.id} style={{padding:'10px', borderLeft:'4px solid #2563eb', background:'#f8fafc', marginBottom:'1rem'}}>
+                                <strong>{s.epreuve}</strong> - {s.heure} <br/> 📍 {s.lieu}
+                            </div>
+                        )) : <p>Aucune épreuve planifiée.</p>
                     )}
-                    {documents.certificat.file && <div style={{fontSize:'0.8rem', marginTop:'0.3rem', color:'#666'}}>Fichier : {documents.certificat.file.name}</div>}
+                    
+                    <div style={{height:'250px', marginTop:'1rem', borderRadius:'8px', overflow:'hidden'}}>
+                        <MapContainer center={[48.9244, 2.3600]} zoom={15} style={{height:'100%'}}>
+                            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                            <Marker position={[48.9250, 2.3610]}><Popup>Chambre d'appel</Popup></Marker>
+                            <Marker position={[48.9240, 2.3590]}><Popup>Zone Échauffement</Popup></Marker>
+                        </MapContainer>
+                    </div>
+
+                    <h3 style={{marginTop:'1.5rem'}}>Performances</h3>
+                    <table style={{fontSize:'0.9rem'}}><tbody>{results.map(r=><tr key={r.id}><td>{r.epreuve}</td><td><b>{r.temps}</b></td></tr>)}</tbody></table>
                 </div>
             </div>
-            
-            <div style={{marginTop:'1rem', fontSize:'0.8rem', color:'#6b7280', fontStyle:'italic'}}>
-                * Vos documents sont vérifiés manuellement par le commissaire sportif.
-            </div>
-          </div>
-
-          {/* COLONNE DROITE : PLANNING */}
-          <div className="panel" style={{flex: 2}}>
-            <h2 className="panel-title">📅 Votre Planning</h2>
-            <div className="event-list">
-              {schedule.map((item) => (
-                <div key={item.id} className="event-item" style={{ borderLeft: '4px solid #3b82f6' }}>
-                  <div className="event-name">{item.epreuve}</div>
-                  <div className="event-meta" style={{ color: '#ef4444', fontWeight: 'bold' }}>
-                    Convocation : {item.heure_convocation}
-                  </div>
-                  <div className="event-meta">📍 {item.lieu}</div>
-                </div>
-              ))}
-            </div>
-
-            <h2 className="panel-title" style={{marginTop:'2rem'}}>🏆 Performances</h2>
-             <table style={{ width: '100%', fontSize: '0.9rem', borderCollapse: 'collapse', marginTop: '0.5rem' }}>
-                <tbody>
-                    {results.map(r => (
-                        <tr key={r.id}><td style={{padding:'0.5rem'}}>{r.epreuve}</td><td style={{fontWeight:'bold'}}>{r.temps}</td></tr>
-                    ))}
-                </tbody>
-             </table>
-             
-             {/* Bouton pour déclarer forfait  */}
-             <div style={{marginTop:'2rem', textAlign:'right'}}>
-                <button className="btn-secondary" style={{color:'#dc2626', borderColor:'#dc2626'}}>Déclarer Forfait</button>
-             </div>
-          </div>
-
         </div>
       </div>
     </div>
   );
 }
-
 export default SportifPage;

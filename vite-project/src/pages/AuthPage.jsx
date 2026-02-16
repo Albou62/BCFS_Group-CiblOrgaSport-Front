@@ -11,36 +11,25 @@ function AuthPage({ setToken, setUsername }) {
   const navigate = useNavigate();
 
   const fetchMeAndRedirect = async (token) => {
-    const res = await fetch(`${API_URL}/api/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!res.ok) {
-      navigate('/spectateur');
-      return;
-    }
-    const me = await res.json();
+    try {
+        const res = await fetch(`${API_URL}/api/auth/me`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) { navigate('/spectateur'); return; }
+        const me = await res.json();
+        setUsername(me.username);
 
-    setUsername(me.username);
-
-    switch (me.role) {
-      case 'RESPONSABLE':
-        navigate('/responsable');
-        break;
-      case 'SPORTIF':
-        navigate('/sportif');
-        break;
-      case 'COMMISSAIRE':
-        navigate('/commissaire');
-        break;
-      case 'VOLONTAIRE':
-        navigate('/volontaire');
-        break;
-      default:
-        navigate('/spectateur');
-    }
+        switch (me.role) {
+            case 'RESPONSABLE': navigate('/responsable'); break;
+            case 'SPORTIF': navigate('/sportif'); break;
+            case 'COMMISSAIRE': navigate('/commissaire'); break;
+            case 'VOLONTAIRE': navigate('/volontaire'); break;
+            default: navigate('/spectateur');
+        }
+    } catch(e) { navigate('/spectateur'); }
   };
 
-  const handleLogin = async (newToken, usernameFromForm) => {
+  const handleLogin = async (newToken) => {
     setToken(newToken);
     localStorage.setItem('token', newToken);
     await fetchMeAndRedirect(newToken);
@@ -52,24 +41,13 @@ function AuthPage({ setToken, setUsername }) {
   };
 
   return (
-    <div className="app-container">
-      <div style={{ width: '100%', maxWidth: '480px' }}>
-        <div className="card">
-          <div className="tabs">
-            <button
-              className={!showRegister ? 'tab active' : 'tab'}
-              type="button"
-              onClick={() => setShowRegister(false)}
-            >
-              Connexion
-            </button>
-            <button
-              className={showRegister ? 'tab active' : 'tab'}
-              type="button"
-              onClick={() => setShowRegister(true)}
-            >
-              Inscription
-            </button>
+    <div className="app-container" style={{alignItems:'center'}}>
+      <div style={{ width: '100%', maxWidth: '400px' }}>
+        <div className="panel" style={{textAlign:'center'}}>
+          <h2 style={{marginBottom:'1.5rem'}}>Bienvenue</h2>
+          <div style={{display:'flex', gap:'1rem', justifyContent:'center', marginBottom:'1.5rem'}}>
+             <button onClick={()=>setShowRegister(false)} style={{background:'none', border:'none', borderBottom: !showRegister?'2px solid #2563eb':'2px solid transparent', fontWeight:!showRegister?'bold':'normal', cursor:'pointer'}}>Connexion</button>
+             <button onClick={()=>setShowRegister(true)} style={{background:'none', border:'none', borderBottom: showRegister?'2px solid #2563eb':'2px solid transparent', fontWeight:showRegister?'bold':'normal', cursor:'pointer'}}>Inscription</button>
           </div>
 
           {showRegister ? (
