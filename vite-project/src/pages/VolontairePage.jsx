@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
+import { SubscriptionManager } from '../components/SubscriptionManager';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -40,8 +41,10 @@ function VolontairePage({ token, onLogout, username }) {
     <div className="app-container">
       <div className="spectator-shell">
         <div className="spectator-header">
-            <div className="spectator-header-left"><h1>Espace Volontaire</h1><p>Merci Hector !</p></div>
-            <div className="spectator-header-right"><button className="btn-secondary" onClick={onLogout}>Déconnexion</button></div>
+            <div className="spectator-header-right">
+                <NotificationBell token={token} userId={userId} />
+                <button className="btn-secondary" onClick={onLogout}>Déconnexion</button>
+            </div>
         </div>
 
         <div className="spectator-main"> 

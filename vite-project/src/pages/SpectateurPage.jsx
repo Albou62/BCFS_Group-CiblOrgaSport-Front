@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { SubscriptionManager } from '../components/SubscriptionManager';
 
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
@@ -63,7 +64,11 @@ function SpectateurPage({ token, username, onLogout }) {
       <div className="spectator-shell">
         <div className="spectator-header">
           <div className="spectator-header-left"><h1>Espace Spectateur</h1><p>{hello}</p></div>
-          <div className="spectator-header-right">{username && <span>{username}</span>}<button className="icon-button" onClick={() => setShowNotifPanel(true)}>🔔</button><button className="btn-secondary" onClick={onLogout}>Déconnexion</button></div>
+           <div className="spectator-header-right">
+            {username && <span>{username}</span>}
+            <NotificationBell token={token} userId={userId} />
+            <button className="btn-secondary" onClick={onLogout}>Déconnexion</button>
+          </div>
         </div>
 
         <div className="spectator-main"> {/* 2 Colonnes */}
@@ -113,6 +118,11 @@ function SpectateurPage({ token, username, onLogout }) {
                     <strong>{t.code}</strong><br/><small>{t.fileName}</small>
                 </div>
             ))}
+          </div>
+
+          {/* COLONNE NOTIFICATIONS */}
+          <div className="panel">
+            <SubscriptionManager token={token} userId={userId} />
           </div>
 
         </div>

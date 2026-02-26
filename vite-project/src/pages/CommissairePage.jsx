@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
+import { GroupManager } from '../components/GroupManager';
+import { SendNotificationForm } from '../components/SendNotificationForm';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -133,14 +135,15 @@ function CommissairePage({ token, onLogout, username }) {
         
         {/* HEADER */}
         <div className="spectator-header">
-          <div className="spectator-header-left">
-            <h1>Espace Commissaire</h1>
-            <p>Administration & Arbitrage</p>
-          </div>
-          <div className="spectator-header-right">
-            {username && <span>{username} (Officiel)</span>}
-            <button className="btn-secondary" onClick={onLogout}>Déconnexion</button>
-          </div>
+            <div className="spectator-header-left">
+                <h1>Espace Commissaire</h1>
+                <p>Administration & Arbitrage</p>
+            </div>
+            <div className="spectator-header-right">
+                {username && <span>{username} (Officiel)</span>}
+                <NotificationBell token={token} userId={userId} /> {/* Ajouté */}
+                <button className="btn-secondary" onClick={onLogout}>Déconnexion</button>
+            </div>
         </div>
 
         {/* CONTENU PRINCIPAL */}
@@ -150,6 +153,7 @@ function CommissairePage({ token, onLogout, username }) {
            <div className="panel" style={{marginBottom:'1rem', display:'flex', gap:'10px', padding:'1rem'}}>
               <button className={`btn-secondary ${view==='epreuves'?'btn-primary':''}`} onClick={()=>setView('epreuves')}>⏱️ Gestion Épreuves</button>
               <button className={`btn-secondary ${view==='admin'?'btn-primary':''}`} onClick={()=>setView('admin')}>🗂️ Administratif {pendingDocs.length > 0 && <span className="badge-warning" style={{marginLeft:'5px'}}>{pendingDocs.length}</span>}</button>
+              <button className={`btn-secondary ${view==='notifications'?'btn-primary':''}`} onClick={()=>setView('notifications')}>🔔 Gestion Notifications</button>
            </div>
 
            {/* --- VUE ADMINISTRATIF (DOCUMENTS) --- */}
@@ -196,6 +200,13 @@ function CommissairePage({ token, onLogout, username }) {
                    )}
                </div>
            )}
+
+           {view === 'notifications' && (
+                <>
+                    <GroupManager token={token} />
+                    <SendNotificationForm token={token} />
+                </>
+            )}
 
            {/* --- VUE SELECTION EPREUVES --- */}
            {view === 'epreuves' && !selectedEvent && (
