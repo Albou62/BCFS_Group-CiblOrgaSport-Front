@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { useEpreuves } from '../hooks/useEpreuves';
+import { useProgramme } from '../hooks/useProgramme';
 import { useAuth } from '../context/AuthContext.jsx';
 
 function VolontairePage() {
@@ -11,7 +11,7 @@ function VolontairePage() {
   const [showModal, setShowModal] = useState(false);
 
   const mapProgramme = useCallback((e, competition) => ({ ...e, context: competition.name }), []);
-  const { epreuves: programme } = useEpreuves(token, { mode: 'all', mapItem: mapProgramme });
+  const { data: programme, loading } = useProgramme({ token, mapper: mapProgramme });
 
   return (
     <div className="app-container">
@@ -39,7 +39,8 @@ function VolontairePage() {
             <div className="panel">
                 <h3>📅 Programme Global (En direct)</h3>
                 <p>Aperçu des épreuves en cours...</p>
-                {programme.length === 0 && <p>Chargement...</p>}
+                <p className="text-error">Workflow incident backend non connecté (hors API fournie).</p>
+                {loading && programme.length === 0 && <p>Chargement...</p>}
                 {programme.map((p) => (
                     <div key={p.id} style={{borderBottom:'1px solid #eee', padding:'5px 0'}}>
                         <strong>{p.name}</strong> <span style={{color:'gray'}}>({p.context})</span>

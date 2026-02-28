@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useEpreuves } from '../hooks/useEpreuves';
+import { useProgramme } from '../hooks/useProgramme';
 import CommissaireTabs from '../features/commissaire/components/CommissaireTabs';
 import PendingDocsTable from '../features/commissaire/components/PendingDocsTable';
 import EventSelectionTable from '../features/commissaire/components/EventSelectionTable';
@@ -10,8 +10,6 @@ import IncidentPanel from '../features/commissaire/components/IncidentPanel';
 import { useEventArbitrage } from '../features/commissaire/hooks/useEventArbitrage';
 import { useAuth } from '../context/AuthContext.jsx';
 
-const API_URL = import.meta.env.VITE_API_URL;
-
 function CommissairePage() {
   const { token, user, logout } = useAuth();
   const [view, setView] = useState('epreuves');
@@ -21,20 +19,22 @@ function CommissairePage() {
     { id: 2, athlete: 'Julie DUBOIS', type: 'Certificat', fileName: 'certif.pdf' },
   ]);
 
-  const { epreuves: events } = useEpreuves(token, { mode: 'all' });
+  const { data: events } = useProgramme({ token });
   const {
     participants,
     currentResultType,
     podium,
+    loading,
+    publishing,
+    error,
     setCurrentResultType,
-    resetForNewEvent,
     updateParticipantResult,
     toggleParticipantStatus,
     importSensors,
     publishResults,
     suspendEvent,
     resultLabel,
-  } = useEventArbitrage();
+  } = useEventArbitrage({ token, selectedEvent });
 
   const handleValidateDoc = (id) => {
     setPendingDocs((prev) => prev.filter((d) => d.id !== id));
@@ -48,7 +48,6 @@ function CommissairePage() {
 
   const handleSelectEvent = (event) => {
     setSelectedEvent(event);
-    resetForNewEvent();
   };
 
   return (
@@ -69,12 +68,15 @@ function CommissairePage() {
           <CommissaireTabs view={view} onChange={setView} pendingDocsCount={pendingDocs.length} />
 
           {view === 'admin' && (
-            <PendingDocsTable
-              pendingDocs={pendingDocs}
-              onReject={handleRejectDoc}
-              onValidate={handleValidateDoc}
-              apiUrl={API_URL}
-            />
+            <>
+              <p className="text-error">Backend non connecté pour ce module (hors API fournie).</p>
+              <PendingDocsTable
+                pendingDocs={pendingDocs}
+                onReject={handleRejectDoc}
+                onValidate={handleValidateDoc}
+                apiUrl=""
+              />
+            </>
           )}
 
           {view === 'epreuves' && !selectedEvent && (
@@ -96,6 +98,8 @@ function CommissairePage() {
                 onResultTypeChange={setCurrentResultType}
                 onImportSensors={importSensors}
               />
+              {loading && <p>Chargement des manches et résultats...</p>}
+              {error && <p className="text-error">{error}</p>}
 
               <ParticipantsResultTable
                 participants={participants}
@@ -105,7 +109,9 @@ function CommissairePage() {
               />
 
               <div style={{textAlign:'right', paddingBottom:'1rem', borderBottom:'1px solid #eee'}}>
-                <button className="btn-primary" onClick={publishResults} style={{fontSize:'1.1rem', padding:'12px 24px'}}>✅ Valider & Publier</button>
+                <button className="btn-primary" onClick={publishResults} style={{fontSize:'1.1rem', padding:'12px 24px'}} disabled={publishing || loading}>
+                  {publishing ? 'Publication...' : '✅ Valider & Publier'}
+                </button>
               </div>
 
               <PodiumDisplay podium={podium} />

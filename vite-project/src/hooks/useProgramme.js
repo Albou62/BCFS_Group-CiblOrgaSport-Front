@@ -18,7 +18,7 @@ export function useProgramme({
   const [raw, setRaw] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshState, setRefreshState] = useState({ key: 0, force: false });
 
   const load = useCallback(
     async ({ force = false, signal } = {}) => {
@@ -29,6 +29,7 @@ export function useProgramme({
         const next = await getProgramme(token, { signal, force });
         setRaw(Array.isArray(next) ? next : []);
       } catch (err) {
+        if (err?.code === 'ABORTED') return;
         setError(err);
       } finally {
         setLoading(false);
@@ -46,12 +47,18 @@ export function useProgramme({
     }
 
     const controller = new AbortController();
-    load({ force: Boolean(forceRefresh), signal: controller.signal });
+    load({
+      force: Boolean(forceRefresh) || refreshState.force,
+      signal: controller.signal,
+    });
     return () => controller.abort();
-  }, [token, enabled, forceRefresh, refreshKey, load]);
+  }, [token, enabled, forceRefresh, refreshState, load]);
 
-  const refetch = useCallback(() => {
-    setRefreshKey((prev) => prev + 1);
+  const refetch = useCallback((options = {}) => {
+    setRefreshState((prev) => ({
+      key: prev.key + 1,
+      force: Boolean(options.force),
+    }));
   }, []);
 
   const data = useMemo(() => {

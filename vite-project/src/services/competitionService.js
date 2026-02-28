@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from './httpClient';
+import { apiGet, apiPost, apiPut } from './httpClient';
 
 const CACHE_TTL_MS = 45_000;
 const cache = new Map();
@@ -8,7 +8,6 @@ const DEBUG_COMPETITION_SERVICE = false;
 function debugLog(...args) {
   if (DEBUG_COMPETITION_SERVICE) {
     // Temporary during rollout; remove once migration is validated.
-    // eslint-disable-next-line no-console
     console.debug('[competitionService]', ...args);
   }
 }
@@ -134,6 +133,28 @@ export function createCompetition(token, payload, options = {}) {
   });
 }
 
+export function getCompetition(token, competitionId, options = {}) {
+  return apiGet(`/api/competitions/${competitionId}`, token, { signal: options.signal });
+}
+
+export function updateCompetition(token, competitionId, payload, options = {}) {
+  return apiPut(`/api/competitions/${competitionId}`, token, payload, { signal: options.signal }).then((updated) => {
+    cache.delete(buildCacheKey('competitions', token));
+    cache.delete(buildCacheKey('programme', token));
+    cache.delete(buildCacheKey('epreuvesByCompetition', token, String(competitionId)));
+    return updated;
+  });
+}
+
+export function finishCompetition(token, competitionId, options = {}) {
+  return apiPost(`/api/competitions/${competitionId}/finish`, token, undefined, { signal: options.signal }).then((updated) => {
+    cache.delete(buildCacheKey('competitions', token));
+    cache.delete(buildCacheKey('programme', token));
+    cache.delete(buildCacheKey('epreuvesByCompetition', token, String(competitionId)));
+    return updated;
+  });
+}
+
 export function getEpreuvesByCompetition(token, competitionId, options = {}) {
   const key = buildCacheKey('epreuvesByCompetition', token, String(competitionId));
   return fetchWithCache(
@@ -149,6 +170,41 @@ export function createEpreuve(token, competitionId, payload, options = {}) {
     cache.delete(buildCacheKey('programme', token));
     return created;
   });
+}
+
+export function getUpcomingEpreuves(token, limit = 3, options = {}) {
+  return apiGet('/api/public/upcoming-epreuves', token, {
+    signal: options.signal,
+    params: { limit },
+  });
+}
+
+export function getManchesByEpreuve(token, epreuveId, options = {}) {
+  return apiGet(`/api/epreuves/${epreuveId}/manches`, token, { signal: options.signal });
+}
+
+export function createManche(token, epreuveId, payload, options = {}) {
+  return apiPost(`/api/epreuves/${epreuveId}/manches`, token, payload, { signal: options.signal });
+}
+
+export function getResultatsByManche(token, mancheId, options = {}) {
+  return apiGet(`/api/manches/${mancheId}/resultats`, token, { signal: options.signal });
+}
+
+export function createResultat(token, mancheId, payload, options = {}) {
+  return apiPost(`/api/manches/${mancheId}/resultats`, token, payload, { signal: options.signal });
+}
+
+export function updateResultat(token, mancheId, resultatId, payload, options = {}) {
+  return apiPut(`/api/manches/${mancheId}/resultats/${resultatId}`, token, payload, { signal: options.signal });
+}
+
+export function getClassementByManche(token, mancheId, options = {}) {
+  return apiGet(`/api/manches/${mancheId}/classement`, token, { signal: options.signal });
+}
+
+export function getPodiumByManche(token, mancheId, options = {}) {
+  return apiGet(`/api/manches/${mancheId}/podium`, token, { signal: options.signal });
 }
 
 export async function getProgramme(token, options = {}) {

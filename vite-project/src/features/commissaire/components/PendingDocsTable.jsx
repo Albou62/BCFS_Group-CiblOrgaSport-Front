@@ -1,6 +1,7 @@
 import React from 'react';
 
 function PendingDocsTable({ pendingDocs, onReject, onValidate, apiUrl }) {
+  const hasApiUrl = Boolean(apiUrl);
   return (
     <div className="panel">
       <h2 className="panel-title">Validation des documents</h2>
@@ -24,9 +25,13 @@ function PendingDocsTable({ pendingDocs, onReject, onValidate, apiUrl }) {
                 <td style={{padding:'12px', fontWeight:'bold'}}>{d.athlete}</td>
                 <td style={{padding:'12px'}}><span className="badge-secondary">{d.type}</span></td>
                 <td style={{padding:'12px'}}>
-                  <a href={`${apiUrl}/uploads/${d.fileName}`} target="_blank" rel="noopener noreferrer" style={{color:'#2563eb', textDecoration:'none', fontWeight:'500'}}>
-                    📄 {d.fileName}
-                  </a>
+                  {hasApiUrl ? (
+                    <a href={`${apiUrl}/uploads/${d.fileName}`} target="_blank" rel="noopener noreferrer" style={{color:'#2563eb', textDecoration:'none', fontWeight:'500'}}>
+                      📄 {d.fileName}
+                    </a>
+                  ) : (
+                    <span style={{color:'#64748b'}}>📄 {d.fileName}</span>
+                  )}
                 </td>
                 <td style={{padding:'12px', textAlign:'right'}}>
                   <button onClick={() => onReject(d.id)} style={{marginRight:'8px', padding:'6px 12px', background:'#fee2e2', color:'#991b1b', border:'none', borderRadius:'6px', cursor:'pointer', fontWeight:'600'}}>Refuser</button>

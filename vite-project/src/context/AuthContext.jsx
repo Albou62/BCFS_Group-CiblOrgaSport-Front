@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { fetchMe, login as authLogin } from '../api/auth.jsx';
+import { login as authLogin, me as authMe } from '../services/authService';
+import { setUnauthorizedHandler } from '../services/httpClient';
 
 export const AUTH_TOKEN_KEY = 'token';
 
@@ -37,6 +38,7 @@ export function AuthProvider({ children }) {
   const applySession = useCallback((nextToken, me) => {
     setToken(nextToken);
     setUser({
+      id: me?.id ?? null,
       username: me?.username ?? null,
       role: me?.role ?? null,
     });
@@ -56,7 +58,7 @@ export function AuthProvider({ children }) {
     }
 
     try {
-      const me = await fetchMe(activeToken);
+      const me = await authMe(activeToken);
       applySession(activeToken, me);
       return me;
     } catch (_error) {
@@ -69,7 +71,7 @@ export function AuthProvider({ children }) {
     const data = await authLogin(username, password);
     saveToken(data.token);
     try {
-      const me = await fetchMe(data.token);
+      const me = await authMe(data.token);
       applySession(data.token, me);
       return getHomeRouteForRole(me.role);
     } catch (error) {
@@ -80,6 +82,13 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(() => {
     clearSession();
+  }, [clearSession]);
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      clearSession();
+    });
+    return () => setUnauthorizedHandler(null);
   }, [clearSession]);
 
   useEffect(() => {
@@ -99,7 +108,7 @@ export function AuthProvider({ children }) {
 
       setToken(storedToken);
       try {
-        const me = await fetchMe(storedToken);
+        const me = await authMe(storedToken);
         applySession(storedToken, me);
       } catch (_error) {
         clearSession();

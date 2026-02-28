@@ -1,4 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL;
+import { API_BASE_URL } from '../config/apiBase';
+
+const API_URL = API_BASE_URL;
 
 const defaultUnauthorizedHandler = () => {};
 let onUnauthorized = defaultUnauthorizedHandler;
@@ -18,18 +20,49 @@ function buildHeaders(token, { hasBody = false, headers = {} } = {}) {
   return builtHeaders;
 }
 
+function buildUrl(path, params) {
+  if (!String(path || '').startsWith('/')) {
+    throw createAppError({
+      code: 'INVALID_PATH',
+      message: 'API path must start with "/"',
+      status: 0,
+      cause: { path },
+    });
+  }
+
+  const url = new URL(`${API_URL}${path}`);
+  if (params && typeof params === 'object') {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value === null || value === undefined || value === '') return;
+      url.searchParams.set(key, String(value));
+    });
+  }
+  return url.toString();
+}
+
 async function parseBody(res) {
-  const contentType = res.headers.get('content-type') || '';
-  if (!contentType) return null;
+  const contentType = (res.headers.get('content-type') || '').toLowerCase();
+  const rawBody = await res.text();
+  if (!rawBody) return null;
+
   if (contentType.includes('application/json')) {
     try {
-      return await res.json();
+      return JSON.parse(rawBody);
     } catch {
-      return null;
+      return rawBody;
     }
   }
-  const text = await res.text();
-  return text || null;
+
+  const firstChar = rawBody.trim().charAt(0);
+  if (firstChar === '{' || firstChar === '[' || firstChar === '"') {
+    try {
+      return JSON.parse(rawBody);
+    } catch {
+      return rawBody;
+    }
+  }
+
+  return rawBody;
 }
 
 function inferErrorCode(status, data) {
@@ -73,9 +106,9 @@ function normalizeNetworkError(error) {
   });
 }
 
-export async function request(path, { method = 'GET', token, body, signal, headers } = {}) {
+export async function request(path, { method = 'GET', token, body, signal, headers, params } = {}) {
   try {
-    const res = await fetch(`${API_URL}${path}`, {
+    const res = await fetch(buildUrl(path, params), {
       method,
       signal,
       headers: buildHeaders(token, { hasBody: body !== undefined, headers }),
@@ -105,4 +138,13 @@ export function apiPost(path, token, body, options = {}) {
 
 export function apiPut(path, token, body, options = {}) {
   return request(path, { ...options, method: 'PUT', token, body });
+}
+
+export function apiDelete(path, token, body, options = {}) {
+  return request(path, { ...options, method: 'DELETE', token, body });
+}
+
+if (import.meta.env.DEV && !import.meta.env.TEST) {
+  // eslint-disable-next-line no-console
+  console.info('[httpClient] API base URL:', API_URL);
 }

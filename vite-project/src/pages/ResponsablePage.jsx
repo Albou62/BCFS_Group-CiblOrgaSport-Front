@@ -24,7 +24,7 @@ function ResponsablePage() {
     selectedCompetition,
   } = useEpreuves(token, { mode: 'byCompetition' });
 
-  const { users, changeRole } = useUsersAdmin(token);
+  const { users, error: usersError, changeRole } = useUsersAdmin(token);
   const { volunteers, assignVolunteer } = useVolunteerAssignments();
 
   const stats = {
@@ -95,6 +95,7 @@ function ResponsablePage() {
           {activeTab === 'users' && (
             <div className="panel">
               <h2 className="panel-title">Administration Utilisateurs</h2>
+              {usersError && <p className="text-error">{usersError}</p>}
               <UsersTable users={users} onChangeRole={changeRole} />
             </div>
           )}
@@ -103,6 +104,7 @@ function ResponsablePage() {
             <div className="panel">
               <h2 className="panel-title">Affectation des Volontaires</h2>
               <p className="panel-subtitle">Assignez les tâches du jour aux équipes terrain.</p>
+              <p className="text-error">Backend non connecté pour ce module (hors API fournie).</p>
               <VolunteersTable volunteers={volunteers} onAssign={assignVolunteer} />
             </div>
           )}

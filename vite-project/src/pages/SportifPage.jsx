@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-import { useEpreuves } from '../hooks/useEpreuves';
+import { useProgramme } from '../hooks/useProgramme';
 import { useAuth } from '../context/AuthContext.jsx';
 
 let DefaultIcon = L.icon({ iconUrl: icon, shadowUrl: iconShadow, iconSize: [25, 41], iconAnchor: [12, 41] });
@@ -22,7 +22,7 @@ function SportifPage() {
     lieu: competition.name,
   }), []);
 
-  const { epreuves: schedule, loading } = useEpreuves(token, { mode: 'all', mapItem: mapSchedule });
+  const { data: schedule, loading } = useProgramme({ token, mapper: mapSchedule });
   const sortedSchedule = useMemo(() => schedule, [schedule]);
 
   return (
@@ -42,6 +42,7 @@ function SportifPage() {
           <div style={{display:'flex', gap:'1.5rem', flexWrap:'wrap'}}>
             <div className="panel" style={{flex:1}}>
               <h2 className="panel-title">🪪 Administratif</h2>
+              <p className="text-error">Backend non connecté pour ce module (hors API fournie).</p>
               <div style={{marginBottom:'1rem', padding:'10px', border:'1px solid #eee', borderRadius:'6px'}}>
                 <div style={{display:'flex', justifyContent:'space-between'}}><strong>Passeport</strong> <span className="badge-warning">{docs.passeport}</span></div>
                 <input type="file" onChange={() => setDocs({...docs, passeport:'En attente'})} />

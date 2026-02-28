@@ -5,8 +5,10 @@ import {
   listEpreuvesByCompetition,
 } from '../services/competitionService';
 
+const identityMapItem = (item) => item;
+
 export function useEpreuves(token, options = {}) {
-  const { mode = 'byCompetition', mapItem = (item) => item } = options;
+  const { mode = 'byCompetition', mapItem = identityMapItem } = options;
 
   const [selectedCompetition, setSelectedCompetition] = useState(null);
   const [epreuves, setEpreuves] = useState([]);

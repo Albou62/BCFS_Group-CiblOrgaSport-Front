@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { register } from '../api/auth';
+import { register } from '../services/authService';
 
 function Register({ onRegistered }) {
   const [username, setUsername] = useState('');

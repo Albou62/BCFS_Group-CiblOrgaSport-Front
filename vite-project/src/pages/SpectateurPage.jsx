@@ -4,11 +4,20 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-import { useEpreuves } from '../hooks/useEpreuves';
+import { useProgramme } from '../hooks/useProgramme';
 import { useAuth } from '../context/AuthContext.jsx';
+import {
+  consumeNotifications,
+  listGroups,
+  listSubscriptionsByUser,
+  subscribeToGroup,
+  unsubscribeFromGroup,
+} from '../services/notificationService';
 
-let DefaultIcon = L.icon({ iconUrl: icon, shadowUrl: iconShadow, iconSize: [25, 41], iconAnchor: [12, 41] });
-L.Marker.prototype.options.icon = DefaultIcon;
+const POLL_INTERVAL_MS = 20_000;
+
+const defaultIcon = L.icon({ iconUrl: icon, shadowUrl: iconShadow, iconSize: [25, 41], iconAnchor: [12, 41] });
+L.Marker.prototype.options.icon = defaultIcon;
 
 function SpectateurPage() {
   const { token, user, logout } = useAuth();
@@ -17,20 +26,85 @@ function SpectateurPage() {
   const [newTicketCode, setNewTicketCode] = useState('');
   const [newTicketFile, setNewTicketFile] = useState(null);
   const [showNotifPanel, setShowNotifPanel] = useState(false);
-  const [notifResults, setNotifResults] = useState(true);
-  const [notifSecurity, setNotifSecurity] = useState(true);
+  const [groups, setGroups] = useState([]);
+  const [selectedGroupIds, setSelectedGroupIds] = useState(new Set());
+  const [notifMessages, setNotifMessages] = useState([]);
+  const [notifError, setNotifError] = useState(null);
+  const [notifLoading, setNotifLoading] = useState(false);
 
   const mapEvent = useCallback((event) => event, []);
-  const { epreuves, loading, reload } = useEpreuves(token, { mode: 'all', mapItem: mapEvent });
+  const { data: epreuves, loading, refetch } = useProgramme({ token, mapper: mapEvent });
 
   const events = useMemo(
     () => [...epreuves].sort((a, b) => new Date(a.horairePublic) - new Date(b.horairePublic)),
     [epreuves]
   );
 
+  const userId = user?.id;
+
+  const loadSubscriptions = useCallback(async () => {
+    if (!token || !userId) return;
+    setNotifLoading(true);
+    setNotifError(null);
+    try {
+      const [groupsData, subscriptionsData] = await Promise.all([
+        listGroups({ token }),
+        listSubscriptionsByUser(userId, { token }),
+      ]);
+      setGroups(groupsData);
+      setSelectedGroupIds(new Set(subscriptionsData.map((item) => item.groupId)));
+    } catch (error) {
+      setNotifError(error?.message || 'Erreur lors du chargement des notifications.');
+    } finally {
+      setNotifLoading(false);
+    }
+  }, [token, userId]);
+
+  const refreshNotifications = useCallback(async () => {
+    if (!token || !userId) return;
+    try {
+      const messages = await consumeNotifications(userId, { token });
+      if (messages.length > 0) {
+        setNotifMessages((prev) => [...messages, ...prev].slice(0, 50));
+      }
+    } catch {
+      // Ignore polling errors to keep page usable.
+    }
+  }, [token, userId]);
+
   useEffect(() => {
     setHello("Prêt pour l'événement ?");
   }, []);
+
+  useEffect(() => {
+    if (!token || !userId) return undefined;
+    refreshNotifications();
+    const intervalId = window.setInterval(refreshNotifications, POLL_INTERVAL_MS);
+    return () => window.clearInterval(intervalId);
+  }, [token, userId, refreshNotifications]);
+
+  useEffect(() => {
+    if (showNotifPanel) loadSubscriptions();
+  }, [showNotifPanel, loadSubscriptions]);
+
+  const handleSubscriptionToggle = async (groupId, checked) => {
+    if (!token || !userId) return;
+    try {
+      if (checked) {
+        await subscribeToGroup(userId, groupId, { token });
+      } else {
+        await unsubscribeFromGroup(userId, groupId, { token });
+      }
+      setSelectedGroupIds((prev) => {
+        const next = new Set(prev);
+        if (checked) next.add(String(groupId));
+        else next.delete(String(groupId));
+        return next;
+      });
+    } catch (error) {
+      setNotifError(error?.message || 'Impossible de mettre à jour cet abonnement.');
+    }
+  };
 
   const handleFileChange = (e) => {
     if (e.target.files) setNewTicketFile(e.target.files[0]);
@@ -79,7 +153,7 @@ function SpectateurPage() {
             </div>
 
             <div className="panel">
-              <div style={{display:'flex', justifyContent:'space-between'}}><h2 className="panel-title">📅 Programme</h2><button onClick={reload}>🔄</button></div>
+              <div style={{display:'flex', justifyContent:'space-between'}}><h2 className="panel-title">📅 Programme</h2><button onClick={() => refetch({ force: true })}>🔄</button></div>
               {loading ? <p>Chargement...</p> : (
                 <ul className="event-list">
                   {events.map((e) => (
@@ -95,6 +169,7 @@ function SpectateurPage() {
 
           <div className="panel">
             <h2 className="panel-title">🎟️ Mes Billets</h2>
+            <p className="text-error">Backend non connecté pour ce module (hors API fournie).</p>
             <form onSubmit={addTicket} style={{display:'flex', flexDirection:'column', gap:'0.5rem', marginBottom:'1rem'}}>
               <input type="text" placeholder="Référence" value={newTicketCode} onChange={(e)=>setNewTicketCode(e.target.value)} style={{padding:'0.5rem', border:'1px solid #ccc', borderRadius:'4px'}}/>
               <input type="file" onChange={handleFileChange} />
@@ -111,9 +186,29 @@ function SpectateurPage() {
         {showNotifPanel && (
           <div className="notifications-overlay-backdrop" onClick={() => setShowNotifPanel(false)}>
             <div className="notifications-overlay" onClick={(e)=>e.stopPropagation()}>
-              <h2>Préférences</h2>
-              <label style={{display:'block'}}><input type="checkbox" checked={notifResults} onChange={(e)=>setNotifResults(e.target.checked)}/> Résultats</label>
-              <label style={{display:'block'}}><input type="checkbox" checked={notifSecurity} onChange={(e)=>setNotifSecurity(e.target.checked)}/> Sécurité</label>
+              <h2>Préférences de notification</h2>
+              {notifLoading && <p>Chargement...</p>}
+              {notifError && <p className="text-error">{notifError}</p>}
+
+              {groups.map((group) => (
+                <label style={{display:'block'}} key={group.groupId}>
+                  <input
+                    type="checkbox"
+                    checked={selectedGroupIds.has(group.groupId)}
+                    onChange={(e) => handleSubscriptionToggle(group.groupId, e.target.checked)}
+                  />{' '}
+                  {group.groupName}
+                </label>
+              ))}
+              {!notifLoading && groups.length === 0 && <p>Aucun groupe disponible.</p>}
+
+              <h3 style={{marginTop:'1rem'}}>Dernières notifications</h3>
+              {notifMessages.length === 0 ? <p>Aucune notification reçue.</p> : (
+                <ul style={{paddingLeft:'1.2rem'}}>
+                  {notifMessages.slice(0, 8).map((message, index) => <li key={`${message}-${index}`}>{message}</li>)}
+                </ul>
+              )}
+
               <button className="btn-primary" style={{marginTop:'1rem'}} onClick={() => setShowNotifPanel(false)}>Fermer</button>
             </div>
           </div>
