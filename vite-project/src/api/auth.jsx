@@ -27,3 +27,17 @@ export async function register(username, password) {
 
   return true; // backend renvoie "OK"
 }
+
+export async function fetchMe(token) {
+  const res = await fetch(`${API_URL}/api/auth/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    throw new Error('Impossible de récupérer le profil');
+  }
+
+  return res.json();
+}
+
+export const getMe = fetchMe;
