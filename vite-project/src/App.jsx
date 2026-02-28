@@ -1,6 +1,6 @@
 // src/App.jsx
-import React, { useState } from 'react';
-import { Routes, Route, Link, useNavigate, Navigate } from 'react-router-dom';
+import React from 'react';
+import { Routes, Route, Link, Navigate } from 'react-router-dom';
 import Accueil from './pages/Accueil.jsx';
 import AuthPage from './pages/AuthPage.jsx';
 import SpectateurPage from './pages/SpectateurPage.jsx';
@@ -8,6 +8,9 @@ import ResponsablePage from './pages/ResponsablePage.jsx';
 import SportifPage from './pages/SportifPage.jsx';
 import CommissairePage from './pages/CommissairePage.jsx';
 import VolontairePage from './pages/VolontairePage.jsx';
+import RequireAuth from './components/RequireAuth.jsx';
+import RequireRole from './components/RequireRole.jsx';
+import GuestOnly from './components/GuestOnly.jsx';
 
 function Header() {
   return (
@@ -39,17 +42,6 @@ function Header() {
 }
 
 function App() {
-  const [token, setToken] = useState(localStorage.getItem('token') || '');
-  const [username, setUsername] = useState('');
-  const navigate = useNavigate();
-
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken('');
-    setUsername('');
-    navigate('/auth');
-  };
-
   return (
     <>
       <Header />
@@ -58,59 +50,49 @@ function App() {
         <Route
           path="/auth"
           element={
-            <AuthPage
-              setToken={setToken}
-              setUsername={setUsername}
-            />
+            <GuestOnly>
+              <AuthPage />
+            </GuestOnly>
           }
         />
         <Route
           path="/spectateur"
           element={
-            <SpectateurPage
-              token={token}
-              username={username}
-              onLogout={logout}
-            />
+            <RequireAuth>
+              <SpectateurPage />
+            </RequireAuth>
           }
         />
         <Route
           path="/responsable"
           element={
-            <ResponsablePage
-              token={token}
-              onLogout={logout}
-            />
+            <RequireRole allowedRoles={['RESPONSABLE']}>
+              <ResponsablePage />
+            </RequireRole>
           }
         />
         <Route
           path="/sportif"
           element={
-            <SportifPage
-              token={token}
-              username={username}
-              onLogout={logout}
-            />
+            <RequireRole allowedRoles={['SPORTIF']}>
+              <SportifPage />
+            </RequireRole>
           }
         />
         <Route
           path="/commissaire"
           element={
-            <CommissairePage
-              token={token}
-              username={username}
-              onLogout={logout}
-            />
+            <RequireRole allowedRoles={['COMMISSAIRE']}>
+              <CommissairePage />
+            </RequireRole>
           }
         />
         <Route
           path="/volontaire"
           element={
-            <VolontairePage
-              token={token}
-              username={username}
-              onLogout={logout}
-            />
+            <RequireRole allowedRoles={['VOLONTAIRE']}>
+              <VolontairePage />
+            </RequireRole>
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />

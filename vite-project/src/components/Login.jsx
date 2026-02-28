@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { login } from '../api/auth';
 
 function Login({ onLogin, prefilledUsername = '' }) {
   const [username, setUsername] = useState(prefilledUsername);
@@ -14,10 +13,8 @@ function Login({ onLogin, prefilledUsername = '' }) {
     e.preventDefault();
     setError('');
     try {
-      const data = await login(username, password); // { token }
-      localStorage.setItem('token', data.token);
       if (onLogin) {
-        onLogin(data.token, username);
+        await onLogin(username, password);
       }
     } catch (err) {
       setError(err.message || 'Erreur de connexion');

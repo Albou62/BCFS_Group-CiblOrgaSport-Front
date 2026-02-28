@@ -2,37 +2,17 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Login from '../components/Login.jsx';
 import Register from '../components/Register.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 
-const API_URL = import.meta.env.VITE_API_URL;
-
-function AuthPage({ setToken, setUsername }) {
+function AuthPage() {
   const [showRegister, setShowRegister] = useState(false);
   const [prefilledUsername, setPrefilledUsername] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const fetchMeAndRedirect = async (token) => {
-    try {
-        const res = await fetch(`${API_URL}/api/auth/me`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) { navigate('/spectateur'); return; }
-        const me = await res.json();
-        setUsername(me.username);
-
-        switch (me.role) {
-            case 'RESPONSABLE': navigate('/responsable'); break;
-            case 'SPORTIF': navigate('/sportif'); break;
-            case 'COMMISSAIRE': navigate('/commissaire'); break;
-            case 'VOLONTAIRE': navigate('/volontaire'); break;
-            default: navigate('/spectateur');
-        }
-    } catch(e) { navigate('/spectateur'); }
-  };
-
-  const handleLogin = async (newToken) => {
-    setToken(newToken);
-    localStorage.setItem('token', newToken);
-    await fetchMeAndRedirect(newToken);
+  const handleLogin = async (username, password) => {
+    const target = await login(username, password);
+    navigate(target, { replace: true });
   };
 
   const handleRegistered = (username) => {
