@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+// AJOUT de useMemo et useCallback dans l'import
+import { useCallback, useEffect, useState, useMemo } from 'react'; 
 import {
   createManche,
   createResultat,
@@ -90,14 +91,18 @@ export function useEventArbitrage({ token, selectedEvent }) {
   const refreshFromBackend = useCallback(
     async (mancheToUse) => {
       if (!token || !mancheToUse?.id) return;
-      const [resultats, podiumDto] = await Promise.all([
-        getResultatsByManche(token, mancheToUse.id),
-        getPodiumByManche(token, mancheToUse.id).catch(() => null),
-      ]);
+      try {
+        const [resultats, podiumDto] = await Promise.all([
+          getResultatsByManche(token, mancheToUse.id),
+          getPodiumByManche(token, mancheToUse.id).catch(() => null),
+        ]);
 
-      setParticipants(mergeParticipants(Array.isArray(resultats) ? resultats : []));
-      setPodium(podiumDto ? podiumToRows(podiumDto) : []);
-      setCurrentResultType(mancheToUse.typeClassement === 'TIME_ASC' ? 'chrono' : 'points');
+        setParticipants(mergeParticipants(Array.isArray(resultats) ? resultats : []));
+        setPodium(podiumDto ? podiumToRows(podiumDto) : []);
+        setCurrentResultType(mancheToUse.typeClassement === 'TIME_ASC' ? 'chrono' : 'points');
+      } catch (err) {
+        console.error("Erreur refresh backend:", err);
+      }
     },
     [token]
   );
@@ -231,6 +236,7 @@ export function useEventArbitrage({ token, selectedEvent }) {
     }
   }, []);
 
+  // L'erreur venait de l'utilisation de useMemo ci-dessous alors qu'il n'était pas importé
   const resultLabel = useMemo(() => {
     if (currentResultType === 'distance') return 'Distance (m)';
     if (currentResultType === 'points') return 'Points';

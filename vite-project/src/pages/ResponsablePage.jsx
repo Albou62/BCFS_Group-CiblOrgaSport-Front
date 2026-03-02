@@ -16,6 +16,7 @@ function ResponsablePage() {
   const { token, user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
 
+  // Récupération des données via vos hooks personnalisés
   const { competitions, createCompetition } = useCompetitions(token);
   const {
     epreuves,
@@ -25,8 +26,8 @@ function ResponsablePage() {
   } = useEpreuves(token, { mode: 'byCompetition' });
 
   const { users, error: usersError, changeRole } = useUsersAdmin(token);
-  const { volunteers, assignVolunteer } = useVolunteerAssignments();
-
+const { volunteers, assignVolunteer } = useVolunteerAssignments(token);
+  // Statistiques fictives pour le dashboard (à connecter au back plus tard si besoin)
   const stats = {
     connexions_jour: 1250,
     temps_moyen: '14 min',
@@ -37,20 +38,28 @@ function ResponsablePage() {
   return (
     <div className="app-container">
       <div className="spectator-shell">
+        
+        {/* En-tête de la page */}
         <div className="spectator-header">
           <div className="spectator-header-left">
             <h1>Espace Responsable</h1>
             <p>Pilotage global et administration.</p>
           </div>
           <div className="spectator-header-right">
-            <span style={{marginRight:'1rem', fontSize:'0.9rem'}}>{user?.username || 'Admin'} (Admin)</span>
+            <span style={{marginRight:'1rem', fontSize:'0.9rem'}}>
+              {user?.username || 'Admin'} (Admin)
+            </span>
             <button className="btn-secondary" onClick={logout}>Déconnexion</button>
           </div>
         </div>
 
+        {/* Navigation entre les onglets */}
         <ResponsableTabs activeTab={activeTab} onChange={setActiveTab} />
 
+        {/* Contenu principal */}
         <div className="spectator-main-full">
+          
+          {/* ONGLET : DASHBOARD */}
           {activeTab === 'dashboard' && (
             <div className="panel">
               <h2 className="panel-title">Indicateurs de performance (KPI)</h2>
@@ -71,6 +80,7 @@ function ResponsablePage() {
             </div>
           )}
 
+          {/* ONGLET : COMPÉTITIONS ET ÉPREUVES */}
           {activeTab === 'competitions' && (
             <div className="panel">
               {!selectedCompetition ? (
@@ -92,22 +102,35 @@ function ResponsablePage() {
             </div>
           )}
 
+          {/* ONGLET : UTILISATEURS */}
           {activeTab === 'users' && (
             <div className="panel">
               <h2 className="panel-title">Administration Utilisateurs</h2>
-              {usersError && <p className="text-error">{usersError}</p>}
+              {usersError && <p className="text-error" style={{ color: 'red' }}>{usersError}</p>}
               <UsersTable users={users} onChangeRole={changeRole} />
             </div>
           )}
 
+          {/* ONGLET : VOLONTAIRES */}
           {activeTab === 'volontaires' && (
             <div className="panel">
               <h2 className="panel-title">Affectation des Volontaires</h2>
               <p className="panel-subtitle">Assignez les tâches du jour aux équipes terrain.</p>
-              <p className="text-error">Backend non connecté pour ce module (hors API fournie).</p>
-              <VolunteersTable volunteers={volunteers} onAssign={assignVolunteer} />
+              
+              {/* Si la liste des volontaires est vide, on affiche un message clair */}
+              {(!volunteers || volunteers.length === 0) ? (
+                <div style={{ background: '#fef2f2', padding: '1rem', borderLeft: '4px solid #ef4444', marginTop: '1rem' }}>
+                  <p style={{ color: '#991b1b', margin: 0 }}>
+                    <strong>Aucun volontaire disponible.</strong> <br/>
+                    (La base de données ne contient aucun utilisateur avec le rôle VOLONTAIRE pour le moment).
+                  </p>
+                </div>
+              ) : (
+                <VolunteersTable volunteers={volunteers} onAssign={assignVolunteer} />
+              )}
             </div>
           )}
+
         </div>
       </div>
     </div>
