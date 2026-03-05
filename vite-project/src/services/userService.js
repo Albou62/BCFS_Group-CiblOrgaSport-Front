@@ -1,53 +1,58 @@
-import { apiGet, apiPost, apiPut } from './httpClient';
+// src/services/userService.js
+import { apiGet, apiPost, apiPut } from './httpClient.js';
 
-// --- ADMINISTRATION (Pour Marius le Responsable) ---
+
+// ---------- SPORTIF ----------
+export function getSportifProfile(token, options = {}) {
+  return apiGet('/api/users/sportif/me', token, { signal: options.signal });
+}
+
+export function uploadDocument(token, payload, options = {}) {
+  return apiPost('/api/users/documents', token, payload, { signal: options.signal });
+}
+
+// ---------- VOLONTAIRE ----------
+export function getMyTasks(token, options = {}) {
+  return apiGet('/api/users/tasks', token, { signal: options.signal });
+}
+
+// ---------- SPECTATEUR ----------
+export function getMyTickets(token, options = {}) {
+  return apiGet('/api/users/tickets', token, { signal: options.signal });
+}
+
+export function addTicket(token, payload, options = {}) {
+  return apiPost('/api/users/tickets', token, payload, { signal: options.signal });
+}
+
+// ---------- COMMISSAIRE ----------
+export function listPendingDocuments(token, options = {}) {
+  return apiGet('/api/admin/documents', token, { signal: options.signal });
+}
+
+export function reviewDocument(token, id, status, options = {}) {
+  return apiPut(`/api/admin/documents/${id}/review`, token, { status }, { signal: options.signal });
+}
+
+// ---------- RESPONSABLE ----------
+export function listVolunteers(token, options = {}) {
+  return apiGet('/api/admin/volontaires', token, { signal: options.signal });
+}
+
+export function assignTask(token, payload, options = {}) {
+  return apiPost('/api/admin/tasks/assign', token, payload, { signal: options.signal });
+}
+
 export function listUsers(token, options = {}) {
   return apiGet('/api/admin/users', token, { signal: options.signal });
 }
 
 export function updateUserRole(token, userId, role, options = {}) {
   return apiPut(`/api/admin/users/${userId}/role`, token, { role }, { signal: options.signal });
+
+  
 }
 
-export function listVolontaires(token) {
-  return apiGet('/api/admin/volontaires', token);
-}
-
-export function assignTask(token, payload) {
-  // payload: { volunteerId, taskName, timeSlot }
-  return apiPost('/api/admin/tasks/assign', token, payload);
-}
-
-// --- DOCUMENTS (Pour Arthur le Commissaire) ---
-export function listPendingDocuments(token) {
-  return apiGet('/api/admin/documents', token);
-}
-
-export function reviewDocument(token, docId, status) {
-  // status: 'VALIDE' ou 'REFUSE'
-  return apiPut(`/api/admin/documents/${docId}/review`, token, { status });
-}
-
-// --- SPORTIF (Pour Léon) ---
-export function getSportifProfile(token) {
-  return apiGet('/api/users/sportif/me', token);
-}
-
-export function uploadDocument(token, docData) {
-  // docData: { type, fileName, status: 'EN_ATTENTE' }
-  return apiPost('/api/users/documents', token, docData);
-}
-
-// --- VOLONTAIRE (Pour Hector) ---
-export function getMyTasks(token) {
-  return apiGet('/api/users/tasks', token);
-}
-
-// --- SPECTATEUR (Pour Suzanne) ---
-export function getMyTickets(token) {
-  return apiGet('/api/users/tickets', token);
-}
-
-export function addTicket(token, ticketData) {
-  return apiPost('/api/users/tickets', token, ticketData);
+export function listVolontaires(token, options = {}) {
+  return apiGet('/api/admin/volontaires', token, { signal: options.signal });
 }

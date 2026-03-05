@@ -1,65 +1,55 @@
-import { useCallback, useState, useEffect } from 'react';
-import { listVolontaires, assignTask, listUsers } from '../../../services/userService'; 
+// src/features/responsable/hooks/useVolunteerAssignments.js
+import { useEffect, useState } from 'react';
 
 export function useVolunteerAssignments(token) {
   const [volunteers, setVolunteers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
- const fetchVolunteers = useCallback(async () => {
-  if (!token) return;
-  try {
-    const profiles = await listVolontaires(token); // Récupère les vrais profils avec tâches
-    const allUsers = await listUsers(token);       // Récupère tous les comptes
-    
-    // On filtre les users pour n'avoir que les volontaires
-    const volunteersOnly = allUsers.filter(u => u.role === 'VOLONTAIRE' || u.role === 'ROLE_VOLONTAIRE');
+  async function fetchVolunteers() {
+    if (!token) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('http://localhost:8080/api/admin/users', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Erreur users');
 
-    // On fusionne : on prend le User, et si un profil existe, on ajoute ses tâches
-    const merged = volunteersOnly.map(user => {
-      const profile = profiles.find(p => p.authUserId === user.id || p.id === user.id);
-      return {
-        ...user,
-        // On récupère la tâche si elle existe dans le profil
-        assignment: profile?.tasks?.[0]?.title || profile?.currentTask || "Aucune",
-        timeSlot: profile?.tasks?.[0]?.timeSlot || ""
-      };
-    });
-
-    setVolunteers(merged);
-  } catch (error) {
-    console.error("Erreur fusion :", error);
+      const allUsers = await res.json();
+      const vols = (allUsers || []).filter((user) => user.role === 'VOLONTAIRE');
+      setVolunteers(vols);
+    } catch (err) {
+      setError(err.message || 'Erreur de récupération des volontaires');
+    } finally {
+      setLoading(false);
+    }
   }
-}, [token]);
+
+  async function assignVolunteer(volunteerId, username, taskName, timeSlot) {
+    if (!token) return;
+    try {
+      const res = await fetch('http://localhost:8080/api/admin/tasks/assign', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ volunteerId, username, taskName, timeSlot }),
+      });
+      if (!res.ok) throw new Error("Erreur lors de l'assignation");
+      const task = await res.json();
+      alert(`Tâche "${taskName}" assignée à ${username}`);
+      await fetchVolunteers();
+      return task;
+    } catch (err) {
+      alert(err.message || "Erreur assignation");
+    }
+  }
 
   useEffect(() => {
     fetchVolunteers();
-  }, [fetchVolunteers]);
+  }, [token]);
 
- const assignVolunteer = useCallback(async (volunteer, taskName, timeSlot) => {
-  if (!token) return;
-
-  try {
-    const payload = { 
-      // Vérifie bien que ces noms correspondent aux .get("...") de ton AdminController
-      volunteerId: volunteer.id, 
-      username: volunteer.username,
-      taskName: taskName, // La mission choisie
-      timeSlot: timeSlot  // L'heure choisie via le nouveau champ
-    };
-
-    console.log("🚀 Envoi au serveur :", payload);
-    await assignTask(token, payload);
-    
-    setVolunteers(prev => prev.map(v => 
-  v.id === volunteer.id 
-    ? { ...v, assignment: taskName, timeSlot: timeSlot } // On met à jour le champ "assignment"
-    : v
-));
-    
-    alert("✅ Mission assignée avec succès !");
-  } catch (error) {
-    console.error("❌ Erreur lors de l'assignation :", error);
-    alert("Erreur serveur (500). Vérifie que tous les champs sont bien envoyés.");
-  }
-}, [token]);
-  return { volunteers, assignVolunteer }; 
+  return { volunteers, assignVolunteer, loading, error };
 }
