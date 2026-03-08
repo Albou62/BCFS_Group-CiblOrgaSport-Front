@@ -17,19 +17,19 @@ function CommissairePage() {
   const [view, setView] = useState('epreuves');
   const [selectedEvent, setSelectedEvent] = useState(null);
 
-  // --- 1. PARTIE ADMIN (VRAI BACKEND) ---
+  // --- 1. PARTIE ADMIN 
   const [pendingDocs, setPendingDocs] = useState([]);
   
   const refreshDocs = useCallback(() => {
-    if (token && view === 'admin') {
-      listPendingDocuments(token)
-        .then(data => setPendingDocs(Array.isArray(data) ? data : []))
-        .catch(err => console.error("Erreur API Admin:", err));
-    }
-  }, [token, view]);
-
-  useEffect(() => { refreshDocs(); }, [refreshDocs]);
-
+  if (token) { 
+    listPendingDocuments(token)
+      .then(data => setPendingDocs(Array.isArray(data) ? data : []))
+      .catch(err => console.error("Erreur API Admin:", err));
+  }
+}, [token]); 
+useEffect(() => { 
+  refreshDocs(); 
+}, [refreshDocs]);
   const handleReview = async (id, status) => {
     try {
       await reviewDocument(token, id, status);
@@ -39,16 +39,14 @@ function CommissairePage() {
     }
   };
 
-  // --- 2. PARTIE ÉPREUVES (VRAI BACKEND + MOCK DE SECOURS SI 500) ---
+  // --- 2. PARTIE ÉPREUVES 
   const { data: eventsBackend, loading: loadingEvents } = useProgramme({ token });
   
-  // Si le backend répond (200), on prend ses données. Si erreur 500, on affiche les mocks.
   const events = (eventsBackend && eventsBackend.length > 0) ? eventsBackend : [
     { id: 1, name: '100m Sprint (Demo)', competitionName: 'Stade de France' },
     { id: 2, name: 'Saut en Hauteur (Demo)', competitionName: 'Arena Bercy' }
   ];
 
-  // --- 3. MOCKS POUR L'ARBITRAGE (On n'utilise plus le hook useEventArbitrage pour éviter les crashs) ---
   const mockParticipants = [
     { athleteId: 101, nom: 'Thomas DURAND', couloir: 4, resultat: '9.58', statut: 'OK' },
     { athleteId: 102, nom: 'Lucas MARTIN', couloir: 5, resultat: '9.72', statut: 'OK' },
