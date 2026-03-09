@@ -36,13 +36,13 @@ function ResponsablePage() {
     changeRole,
   } = useUsersAdmin(token);
 
-  // 5. Volontaires
   const {
-    volunteers,
-    assignVolunteer,
-    loading: volunteersLoading,
-    error: volunteersError,
-  } = useVolunteerAssignments(token);
+  volunteers,
+  assignVolunteer,
+  loading: volunteersLoading, // On renomme 'loading' en 'volunteersLoading' ici
+  error: volunteersError,
+  refresh
+} = useVolunteerAssignments(token);
 
   // 6. Notifications (hook)
   const {
@@ -252,26 +252,29 @@ function ResponsablePage() {
           )}
 
           {/* VOLONTAIRES */}
-          {activeTab === 'volontaires' && (
-            <div className="panel">
-              <h2 className="panel-title">Affectation des Volontaires</h2>
-              <p className="panel-subtitle">
-                Assignez les tâches du jour aux équipes terrain.
-              </p>
 
-              {volunteersLoading && <p>Chargement des volontaires...</p>}
-              {volunteersError && (
-                <p className="text-error">{volunteersError}</p>
-              )}
+{activeTab === 'volontaires' && (
+  <div className="panel">
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div>
+        <h2 className="panel-title">Affectation des Volontaires</h2>
+        <p className="panel-subtitle">Planification des missions (accueil, transport, médical...) [cite: 41]</p>
+      </div>
+     <button className="btn-secondary" onClick={() => refresh()}>
+  🔄 Actualiser les statuts
+</button>
+    </div>
 
-              {!volunteersLoading && !volunteersError && (
-                <VolunteersTable
-                  volunteers={volunteers}
-                  onAssign={assignVolunteer}
-                />
-              )}
-            </div>
-          )}
+    {volunteersLoading && <p>Synchronisation des profils...</p>}
+    
+    {!volunteersLoading && (
+      <VolunteersTable
+        volunteers={volunteers}
+        onAssign={assignVolunteer} 
+      />
+    )}
+  </div>
+)}
 
           {/* NOTIFICATIONS */}
           {activeTab === 'notifications' && (

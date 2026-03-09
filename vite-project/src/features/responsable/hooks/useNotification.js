@@ -1,4 +1,3 @@
-// src/features/responsable/hooks/useNotification.js
 import { useCallback, useState } from 'react';
 import { listGroups, publishNotification } from '../../../services/notificationService.js';
 

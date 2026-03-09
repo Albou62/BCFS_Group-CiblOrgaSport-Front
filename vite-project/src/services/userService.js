@@ -56,3 +56,17 @@ export function updateUserRole(token, userId, role, options = {}) {
 export function listVolontaires(token, options = {}) {
   return apiGet('/api/admin/volontaires', token, { signal: options.signal });
 }
+
+export const updateTaskStatus = async (taskId, newStatus, token) => {
+  const response = await fetch(`http://localhost:8080/api/tasks/${taskId}/status`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ status: newStatus })
+  });
+  
+  if (!response.ok) throw new Error("Erreur lors de la mise à jour du statut");
+  return true;
+};
