@@ -3,7 +3,6 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { listPendingDocuments, reviewDocument } from '../services/userService';
 import { useProgramme } from '../hooks/useProgramme';
 
-// Tes composants UI
 import CommissaireTabs from '../features/commissaire/components/CommissaireTabs';
 import PendingDocsTable from '../features/commissaire/components/PendingDocsTable';
 import EventSelectionTable from '../features/commissaire/components/EventSelectionTable';
@@ -19,17 +18,17 @@ function CommissairePage() {
 
   // --- 1. PARTIE ADMIN 
   const [pendingDocs, setPendingDocs] = useState([]);
-  
+
   const refreshDocs = useCallback(() => {
-  if (token) { 
-    listPendingDocuments(token)
-      .then(data => setPendingDocs(Array.isArray(data) ? data : []))
-      .catch(err => console.error("Erreur API Admin:", err));
-  }
-}, [token]); 
-useEffect(() => { 
-  refreshDocs(); 
-}, [refreshDocs]);
+    if (token) {
+      listPendingDocuments(token)
+        .then(data => setPendingDocs(Array.isArray(data) ? data : []))
+        .catch(err => console.error("Erreur API Admin:", err));
+    }
+  }, [token]);
+  useEffect(() => {
+    refreshDocs();
+  }, [refreshDocs]);
   const handleReview = async (id, status) => {
     try {
       await reviewDocument(token, id, status);
@@ -41,7 +40,7 @@ useEffect(() => {
 
   // --- 2. PARTIE ÉPREUVES 
   const { data: eventsBackend, loading: loadingEvents } = useProgramme({ token });
-  
+
   const events = (eventsBackend && eventsBackend.length > 0) ? eventsBackend : [
     { id: 1, name: '100m Sprint (Demo)', competitionName: 'Stade de France' },
     { id: 2, name: 'Saut en Hauteur (Demo)', competitionName: 'Arena Bercy' }
@@ -68,31 +67,31 @@ useEffect(() => {
             <p>Gestion {view === 'admin' ? 'Administrative' : 'Arbitrage'}</p>
           </div>
           <div className="spectator-header-right">
-            {user?.username && <span style={{marginRight: '15px'}}>{user.username} (Officiel)</span>}
+            {user?.username && <span style={{ marginRight: '15px' }}>{user.username} (Officiel)</span>}
             <button className="btn-secondary" onClick={logout}>Déconnexion</button>
           </div>
         </div>
 
-        <div className="spectator-main-full" style={{padding: '20px'}}>
+        <div className="spectator-main-full" style={{ padding: '20px' }}>
           <CommissaireTabs view={view} onChange={setView} pendingDocsCount={pendingDocs.length} />
 
-          {/* VUE ADMINISTRATIVE : CONNECTÉE AU BACKEND */}
+          {/* VUE ADMINISTRATIVE */}
           {view === 'admin' && (
-            <div className="panel" style={{marginTop: '20px'}}>
+            <div className="panel" style={{ marginTop: '20px' }}>
               <h2 className="panel-title">Dossiers à valider</h2>
-              <PendingDocsTable 
-                pendingDocs={pendingDocs} 
+              <PendingDocsTable
+                pendingDocs={pendingDocs}
                 onValidate={(id) => handleReview(id, 'VALIDE')}
                 onReject={(id) => handleReview(id, 'REFUSE')}
               />
             </div>
           )}
 
-          {/* VUE ÉPREUVES : LISTE (RÉEL OU MOCK SI CRASH) */}
+          {/* VUE ÉPREUVES : LISTE RÉELLE */}
           {view === 'epreuves' && !selectedEvent && (
-            <div style={{marginTop: '20px'}}>
+            <div style={{ marginTop: '20px' }}>
               {loadingEvents ? (
-                 <p>Chargement des épreuves...</p>
+                <p>Chargement des épreuves...</p>
               ) : (
                 <EventSelectionTable events={events} onSelect={setSelectedEvent} />
               )}
@@ -101,31 +100,31 @@ useEffect(() => {
 
           {/* VUE ARBITRAGE : RÉSULTATS ET PODIUM (MOCKS POUR STABILITÉ) */}
           {view === 'epreuves' && selectedEvent && (
-            <div className="panel" style={{marginTop: '20px'}}>
-              <div style={{display:'flex', justifyContent:'space-between', marginBottom:'1.5rem'}}>
+            <div className="panel" style={{ marginTop: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
                 <button className="btn-secondary" onClick={() => setSelectedEvent(null)}>⬅ Retour</button>
-                <div style={{textAlign:'right'}}>
-                  <h2 style={{margin:0}}>{selectedEvent.name}</h2>
-                  <span style={{color:'#666'}}>{selectedEvent.competitionName}</span>
+                <div style={{ textAlign: 'right' }}>
+                  <h2 style={{ margin: 0 }}>{selectedEvent.name}</h2>
+                  <span style={{ color: '#666' }}>{selectedEvent.competitionName}</span>
                 </div>
               </div>
 
               <ArbitrageToolbar currentResultType="chrono" />
-              
-              <ParticipantsResultTable 
-                participants={mockParticipants} 
+
+              <ParticipantsResultTable
+                participants={mockParticipants}
                 label="Temps (s)"
-                onResultChange={() => {}} 
-                onToggleStatus={() => {}} 
+                onResultChange={() => { }}
+                onToggleStatus={() => { }}
               />
 
-              <div style={{textAlign:'right', marginTop:'20px', borderTop: '1px solid #eee', paddingTop: '15px'}}>
+              <div style={{ textAlign: 'right', marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
                 <button className="btn-primary" onClick={() => alert("Résultats publiés !")}>
                   ✅ Publier les résultats
                 </button>
               </div>
 
-              <div style={{marginTop: '30px'}}>
+              <div style={{ marginTop: '30px' }}>
                 <PodiumDisplay podium={mockPodium} />
               </div>
 

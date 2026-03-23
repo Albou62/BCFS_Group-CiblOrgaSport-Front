@@ -85,35 +85,35 @@ function SpectateurPage() {
 
   // ============ NOTIFICATIONS SIMPLIFIÉES ✅ ============
   const refreshNotifications = useCallback(async () => {
-  if (!token || !userId) return;
-  
-  try {
-    const messages = await consumeNotifications(userId, { token });
-    
-    if (messages?.length > 0) {
-      setNotifMessages(prev => {
-        // Crée un Set des messages déjà vus
-        const seen = new Set(prev.map(msg => 
-          typeof msg === 'string' ? msg : JSON.stringify(msg)
-        ));
-        
-        // Filtre UNIQUEMENT les nouveaux
-        const newOnly = messages.filter(msg => {
-          const msgStr = typeof msg === 'string' ? msg : JSON.stringify(msg);
-          return !seen.has(msgStr);
+    if (!token || !userId) return;
+
+    try {
+      const messages = await consumeNotifications(userId, { token });
+
+      if (messages?.length > 0) {
+        setNotifMessages(prev => {
+          // Crée un Set des messages déjà vus
+          const seen = new Set(prev.map(msg =>
+            typeof msg === 'string' ? msg : JSON.stringify(msg)
+          ));
+
+          // Filtre UNIQUEMENT les nouveaux
+          const newOnly = messages.filter(msg => {
+            const msgStr = typeof msg === 'string' ? msg : JSON.stringify(msg);
+            return !seen.has(msgStr);
+          });
+
+          // Ajoute seulement les nouveaux en haut
+          if (newOnly.length > 0) {
+            return [...newOnly, ...prev.slice(0, 19)];
+          }
+          return prev;
         });
-        
-        // Ajoute seulement les nouveaux en haut
-        if (newOnly.length > 0) {
-          return [...newOnly, ...prev.slice(0, 19)];
-        }
-        return prev;
-      });
+      }
+    } catch (error) {
+      console.error('Notifications:', error);
     }
-  } catch (error) {
-    console.error('Notifications:', error);
-  }
-}, [token, userId]);
+  }, [token, userId]);
 
 
   const loadSubscriptions = useCallback(async () => {
@@ -137,10 +137,10 @@ function SpectateurPage() {
   // Polling notifications - Backend gère les doublons
   useEffect(() => {
     if (!token || !userId) return;
-    
+
     refreshNotifications(); // Load initial
     const intervalId = setInterval(refreshNotifications, POLL_INTERVAL_MS);
-    
+
     return () => clearInterval(intervalId);
   }, [token, userId, refreshNotifications]);
 
@@ -260,7 +260,7 @@ function SpectateurPage() {
                 <h2 className="panel-title">📅 Programme</h2>
                 <button onClick={() => window.location.reload()}>🔄</button>
               </div>
-              
+
               {programLoading ? (
                 <p style={{ padding: '2rem', textAlign: 'center' }}>🔄 Chargement...</p>
               ) : events.length === 0 ? (
@@ -292,9 +292,9 @@ function SpectateurPage() {
                         <div style={{ fontWeight: '600', fontSize: '1.1rem' }}>
                           {e.horairePublic
                             ? new Date(e.horairePublic).toLocaleTimeString('fr-FR', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
                             : '---'}
                         </div>
                         <div style={{ fontSize: '0.75rem', color: '#999' }}>

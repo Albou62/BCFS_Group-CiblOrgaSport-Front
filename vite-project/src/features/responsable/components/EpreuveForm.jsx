@@ -7,31 +7,56 @@ function EpreuveForm({ onSubmit }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await onSubmit({ name: epreuveName, horairePublic, horaireAthletes });
+
+
+    await onSubmit({
+      name: epreuveName,
+      horairePublic: horairePublic,
+      horaireAthletes: horairePublic
+    });
+
+    // Reset du formulaire
     setEpreuveName('');
     setHorairePublic('');
-    setHoraireAthletes('');
   };
 
   return (
-    <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', border:'1px solid #bfdbfe' }}>
-      <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem', color:'#1e40af' }}>Ajouter une épreuve</h3>
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '0.5rem', alignItems: 'end' }}>
-        <div>
-          <label style={{fontSize:'0.8rem'}}>Nom Épreuve</label>
-          <input type="text" value={epreuveName} onChange={(e)=>setEpreuveName(e.target.value)} required placeholder="Ex: Finale 100m NL" style={{width:'100%', padding:'0.5rem'}} />
-        </div>
-        <div>
-          <label style={{fontSize:'0.8rem'}}>Horaire Public</label>
-          <input type="datetime-local" value={horairePublic} onChange={(e)=>setHorairePublic(e.target.value)} required style={{width:'100%', padding:'0.5rem'}} />
-        </div>
-        <div>
-          <label style={{fontSize:'0.8rem'}}>Horaire Athlètes</label>
-          <input type="datetime-local" value={horaireAthletes} onChange={(e)=>setHoraireAthletes(e.target.value)} required style={{width:'100%', padding:'0.5rem'}} />
-        </div>
-        <button className="btn-primary" type="submit">Ajouter</button>
-      </form>
-    </div>
+    <form onSubmit={handleSubmit} style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '12px',
+      padding: '15px',
+      background: '#fff',
+      borderRadius: '8px',
+      border: '1px solid #e2e8f0'
+    }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <label style={{ fontSize: '0.85rem', fontWeight: '600' }}>Nom de l'épreuve</label>
+        <input
+          type="text"
+          placeholder="Ex: Demi-finale 100m"
+          value={epreuveName}
+          onChange={(e) => setEpreuveName(e.target.value)}
+          style={{ padding: '8px', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+          required
+        />
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <label style={{ fontSize: '0.85rem', fontWeight: '600' }}>Date et Heure</label>
+        <input
+          type="datetime-local"
+          value={horairePublic}
+          onChange={(e) => setHorairePublic(e.target.value)}
+          style={{ padding: '8px', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+          required
+        />
+      </div>
+
+      <button type="submit" className="btn-primary" style={{ marginTop: '8px' }}>
+        ➕ Créer l'épreuve
+      </button>
+    </form>
   );
 }
 
