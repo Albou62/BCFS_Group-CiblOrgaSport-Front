@@ -12,6 +12,7 @@ import { useUsersAdmin } from '../features/responsable/hooks/useUsersAdmin';
 import { useVolunteerAssignments } from '../features/responsable/hooks/useVolunteerAssignments';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNotifications } from '../features/responsable/hooks/useNotification';
+import Geolocation from '../components/Geolocation.jsx';
 
 function ResponsablePage() {
   // 1. Auth
@@ -99,6 +100,7 @@ function ResponsablePage() {
 
   return (
     <div className="app-container">
+      <Geolocation />
       <div className="spectator-shell">
         {/* HEADER */}
         <div className="spectator-header">
