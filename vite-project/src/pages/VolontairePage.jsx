@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { getMyTasks } from '../services/userService'; 
+import { getMyTasks } from '../services/userService';
 
 function VolontairePage() {
   const { token, user, logout } = useAuth();
