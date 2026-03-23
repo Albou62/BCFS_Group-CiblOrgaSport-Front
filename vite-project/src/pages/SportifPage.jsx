@@ -2,7 +2,6 @@ import React, { useCallback, useState, useEffect } from 'react';
 import { useProgramme } from '../hooks/useProgramme';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getSportifProfile, uploadDocument } from '../services/userService';
-import Geolocation from '../components/Geolocation.jsx';
 
 function SportifPage() {
   const { token, user, logout } = useAuth();
@@ -54,7 +53,6 @@ function SportifPage() {
 
   return (
     <div className="app-container">
-      <Geolocation />
       <div className="spectator-shell">
         <div className="spectator-header">
           <div className="spectator-header-left">

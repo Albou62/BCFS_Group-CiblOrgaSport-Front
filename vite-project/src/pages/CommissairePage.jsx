@@ -11,7 +11,6 @@ import ArbitrageToolbar from '../features/commissaire/components/ArbitrageToolba
 import ParticipantsResultTable from '../features/commissaire/components/ParticipantsResultTable';
 import PodiumDisplay from '../features/commissaire/components/PodiumDisplay';
 import IncidentPanel from '../features/commissaire/components/IncidentPanel';
-import Geolocation from '../components/Geolocation';
 
 function CommissairePage() {
   const { token, user, logout } = useAuth();
@@ -62,7 +61,6 @@ useEffect(() => {
 
   return (
     <div className="app-container">
-      <Geolocation />
       <div className="spectator-shell">
         <div className="spectator-header">
           <div className="spectator-header-left">

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { getMyTasks } from '../services/userService'; 
-import Geolocation from '../components/Geolocation.jsx';
+import { getMyTasks } from '../services/userService';
 
 function VolontairePage() {
   const { token, user, logout } = useAuth();
@@ -119,7 +118,6 @@ function VolontairePage() {
 
   return (
     <div className="app-container">
-      <Geolocation />
       <div className="spectator-shell">
         {/* HEADER */}
         <div className="spectator-header">

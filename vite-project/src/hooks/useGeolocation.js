@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
+import { postLocation } from "../services/geolocationService";
 
-export function useGeolocation() {
+export function useGeolocation(user) {
 
     const [location, setLocation] = useState(null)
     const [loading, setLoading] = useState(null)
@@ -39,6 +40,7 @@ export function useGeolocation() {
                     setLoading(false);
                 }
             );
+            postLocation(user.id, location.latitude, location.longitude, location.altitude);
         } catch (e) {
             setError(e.message);
             setLocation({

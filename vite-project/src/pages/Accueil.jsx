@@ -1,10 +1,8 @@
 import React from 'react';
-import Geolocation from '../components/Geolocation.jsx';
 
 function Accueil() {
   return (
     <div className="app-container">
-      <Geolocation />
       <div style={{ width: '100%', maxWidth: '900px', textAlign:'center', marginTop:'4rem' }}>
         <h1 style={{fontSize:'3rem', marginBottom:'1rem', color:'#1e3a8a'}}>CiblOrgaSport 2026</h1>
         <p style={{fontSize:'1.2rem', color:'#475569', marginBottom:'3rem'}}>

@@ -11,8 +11,12 @@ import VolontairePage from './pages/VolontairePage.jsx';
 import RequireAuth from './components/RequireAuth.jsx';
 import RequireRole from './components/RequireRole.jsx';
 import GuestOnly from './components/GuestOnly.jsx';
+import { useGeolocation } from './hooks/useGeolocation.js';
 
 function Header() {
+  const { location, loading, error, getLocation } = useGeolocation();
+  const { token, user, logout } = useAuth();
+
   return (
     <header
       style={{
@@ -36,6 +40,11 @@ function Header() {
         <Link to="/auth" style={{ color: '#e5e7eb', textDecoration: 'none' }}>
           Connexion
         </Link>
+        <div>
+          <button onClick={getLocation(user)} disabled={loading} className="btn-primary">
+            {loading ? 'Recherche...' : 'Obtenir géolocalisation'}
+          </button>
+        </div>
       </nav>
     </header>
   );

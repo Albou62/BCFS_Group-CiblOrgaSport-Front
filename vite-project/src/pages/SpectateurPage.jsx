@@ -16,7 +16,6 @@ import {
   getMyTickets,
   addTicket as addTicketApi,
 } from '../services/userService';
-import Geolocation from '../components/Geolocation.jsx';
 
 const POLL_INTERVAL_MS = 45000;
 
@@ -204,7 +203,6 @@ function SpectateurPage() {
 
   return (
     <div className="app-container">
-      <Geolocation />
       <div className="spectator-shell">
         {/* Header */}
         <div className="spectator-header">
