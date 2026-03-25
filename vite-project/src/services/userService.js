@@ -11,6 +11,9 @@ export function uploadDocument(token, payload, options = {}) {
   return apiPost('/api/users/documents', token, payload, { signal: options.signal });
 }
 
+export function registerToEpreuve(token, payload, options = {}) {
+  return apiPost('/api/admin/sportif/inscrire', token, payload, { signal: options.signal });
+}
 // ---------- VOLONTAIRE ----------
 export function getMyTasks(token, options = {}) {
   return apiGet('/api/users/tasks', token, { signal: options.signal });
@@ -50,11 +53,33 @@ export function listUsers(token, options = {}) {
 export function updateUserRole(token, userId, role, options = {}) {
   return apiPut(`/api/admin/users/${userId}/role`, token, { role }, { signal: options.signal });
 
-  
+
+}
+
+export async function unregisterAthlete(token, epreuveId, username) {
+  console.log("Appel DELETE sur :", `.../epreuves/${epreuveId}/participants/${username}`);
+
+  const response = await fetch(`http://localhost:8080/api/admin/epreuves/${epreuveId}/participants/${username}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    const errorMsg = await response.text();
+    throw new Error(errorMsg || 'Erreur serveur');
+  }
+  return true;
 }
 
 export function listVolontaires(token, options = {}) {
   return apiGet('/api/admin/volontaires', token, { signal: options.signal });
+}
+
+export function getParticipantsByEpreuve(token, epreuveId) {
+  return apiGet(`/api/admin/epreuves/${epreuveId}/participants`, token);
 }
 
 export const updateTaskStatus = async (taskId, newStatus, token) => {
@@ -66,7 +91,7 @@ export const updateTaskStatus = async (taskId, newStatus, token) => {
     },
     body: JSON.stringify({ status: newStatus })
   });
-  
+
   if (!response.ok) throw new Error("Erreur lors de la mise à jour du statut");
   return true;
 };

@@ -12,6 +12,7 @@ import { useUsersAdmin } from '../features/responsable/hooks/useUsersAdmin';
 import { useVolunteerAssignments } from '../features/responsable/hooks/useVolunteerAssignments';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNotifications } from '../features/responsable/hooks/useNotification';
+import { getParticipantsByEpreuve, unregisterAthlete } from '../services/userService';
 
 function ResponsablePage() {
   // 1. Auth
@@ -37,12 +38,12 @@ function ResponsablePage() {
   } = useUsersAdmin(token);
 
   const {
-  volunteers,
-  assignVolunteer,
-  loading: volunteersLoading, // On renomme 'loading' en 'volunteersLoading' ici
-  error: volunteersError,
-  refresh
-} = useVolunteerAssignments(token);
+    volunteers,
+    assignVolunteer,
+    loading: volunteersLoading,
+    error: volunteersError,
+    refresh
+  } = useVolunteerAssignments(token);
 
   // 6. Notifications (hook)
   const {
@@ -59,6 +60,34 @@ function ResponsablePage() {
     label: '',
     impactLevel: 'INFO',
   });
+
+  const [participants, setParticipants] = useState([]);
+  const [loadingParticipants, setLoadingParticipants] = useState(false);
+  const [selectedEpreuveId, setSelectedEpreuveId] = useState(null);
+  const [selectedEpreuveName, setSelectedEpreuveName] = useState("");
+
+  const loadParticipants = async (epreuveId, epreuveName = "") => {
+    setParticipants([]);
+
+    setSelectedEpreuveId(epreuveId);
+    setSelectedEpreuveName(epreuveName);
+    setLoadingParticipants(true);
+
+    try {
+      const data = await getParticipantsByEpreuve(token, epreuveId);
+
+      if (data && Array.isArray(data)) {
+        setParticipants(data);
+      } else {
+        setParticipants([]);
+      }
+    } catch (err) {
+      console.error("Erreur chargement participants", err);
+      setParticipants([]);
+    } finally {
+      setLoadingParticipants(false);
+    }
+  };
 
   // 8. Effet : charger les groupes uniquement quand on arrive sur l’onglet notifications
   useEffect(() => {
@@ -94,6 +123,30 @@ function ResponsablePage() {
       alert('✅ Notification envoyée !');
     } else if (result?.error) {
       alert(result.error);
+    }
+  };
+
+  const handleRemoveParticipant = async (username) => {
+    // DEBUG : Vérifie ces deux valeurs dans la console F12
+    console.log("ID Épreuve stocké :", selectedEpreuveId);
+    console.log("Username reçu :", username);
+
+    if (!selectedEpreuveId || !username) {
+      alert(`Données manquantes : ID=${selectedEpreuveId}, User=${username}`);
+      return;
+    }
+
+    if (!window.confirm(`Retirer ${username} ?`)) return;
+
+    try {
+      const success = await unregisterAthlete(token, selectedEpreuveId, username);
+      if (success) {
+        setParticipants(prev => prev.filter(p => p.username !== username));
+        alert("✅ Retiré !");
+      }
+    } catch (err) {
+      // Affiche l'erreur réelle du backend
+      alert("❌ Erreur Backend : " + err.message);
     }
   };
 
@@ -217,26 +270,89 @@ function ResponsablePage() {
                 </>
               ) : (
                 <>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '1rem',
-                    }}
-                  >
-                    <button
-                      className="btn-secondary"
-                      onClick={() => selectCompetition(null)}
-                    >
-                      ⬅ Retour Liste
-                    </button>
-                    <h2 className="panel-title" style={{ margin: 0 }}>
-                      Épreuves : {selectedCompetition.name}
-                    </h2>
+                  {/* HEADER DE LA COMPÉTITION SÉLECTIONNÉE */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '2px solid #f1f5f9', paddingBottom: '1rem' }}>
+                    <button className="btn-secondary" onClick={() => selectCompetition(null)}>⬅ Retour aux compétitions</button>
+                    <h2 className="panel-title" style={{ margin: 0 }}>🏆 {selectedCompetition.name}</h2>
+                    <div style={{ color: '#64748b', fontSize: '0.9rem' }}>Lieu: {selectedCompetition.lieu}</div>
                   </div>
-                  <EpreuveForm onSubmit={createEpreuve} />
-                  <EpreuveTable epreuves={epreuves} />
+
+                  {/* LAYOUT EN DEUX COLONNES */}
+                  <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
+
+                    {/* COLONNE GAUCHE : GESTION DES ÉPREUVES (60% de large) */}
+                    <div style={{ flex: 3 }}>
+                      <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
+                        <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>➕ Ajouter une épreuve</h3>
+                        <EpreuveForm onSubmit={createEpreuve} />
+                      </div>
+
+                      <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>📅 Liste des épreuves</h3>
+                      <EpreuveTable
+                        epreuves={epreuves}
+                        onSelectEpreuve={(ep) => loadParticipants(ep.id, ep.name)}
+                      />
+                    </div>
+
+                    <div style={{ flex: 2, position: 'sticky', top: '10px' }}>
+                      <div className="panel" style={{ marginTop: 0, borderTop: '4px solid #10b981', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
+                        <h3 style={{ fontSize: '1.1rem', color: '#059669', display: 'flex', justifyContent: 'space-between' }}>
+                          👥 Inscrits
+                          {selectedEpreuveName && <span style={{ fontSize: '0.8rem', background: '#d1fae5', padding: '2px 8px', borderRadius: '4px' }}>{selectedEpreuveName}</span>}
+                        </h3>
+
+                        {loadingParticipants ? (
+                          <p style={{ textAlign: 'center', padding: '20px' }}>🔄 Chargement...</p>
+                        ) : !selectedEpreuveId ? (
+                          <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8', border: '2px dashed #e2e8f0', borderRadius: '8px' }}>
+                            Cliquez sur une épreuve à gauche pour voir les participants
+                          </div>
+                        ) : participants.length === 0 ? (
+                          <p style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>Aucun athlète inscrit.</p>
+                        ) : (
+                          <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
+                            {participants.map(p => (
+                              <div key={p.id} style={{
+                                padding: '12px',
+                                borderBottom: '1px solid #f1f5f9',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center'
+                              }}>
+                                <div>
+                                  <div style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{p.firstName} {p.lastName}</div>
+                                  <div style={{ fontSize: '0.75rem', color: '#64748b' }}>@{p.username}</div>
+                                </div>
+
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '5px' }}>
+                                  <span style={{ fontSize: '0.65rem', color: '#059669', fontWeight: 'bold', background: '#d1fae5', padding: '2px 6px', borderRadius: '4px' }}>
+                                    ✅ INSCRIT
+                                  </span>
+
+                                  {/* NOUVEAU BOUTON DE RETRAIT */}
+                                  <button
+                                    onClick={() => handleRemoveParticipant(p.username)}
+                                    style={{
+                                      background: 'none',
+                                      border: 'none',
+                                      color: '#dc2626',
+                                      fontSize: '0.75rem',
+                                      textDecoration: 'underline',
+                                      cursor: 'pointer',
+                                      padding: 0
+                                    }}
+                                  >
+                                    Retirer
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                  </div>
                 </>
               )}
             </div>
@@ -253,28 +369,28 @@ function ResponsablePage() {
 
           {/* VOLONTAIRES */}
 
-{activeTab === 'volontaires' && (
-  <div className="panel">
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <div>
-        <h2 className="panel-title">Affectation des Volontaires</h2>
-        <p className="panel-subtitle">Planification des missions (accueil, transport, médical...) [cite: 41]</p>
-      </div>
-     <button className="btn-secondary" onClick={() => refresh()}>
-  🔄 Actualiser les statuts
-</button>
-    </div>
+          {activeTab === 'volontaires' && (
+            <div className="panel">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h2 className="panel-title">Affectation des Volontaires</h2>
+                  <p className="panel-subtitle">Planification des missions (accueil, transport, médical...)</p>
+                </div>
+                <button className="btn-secondary" onClick={() => refresh()}>
+                  🔄 Actualiser les statuts
+                </button>
+              </div>
 
-    {volunteersLoading && <p>Synchronisation des profils...</p>}
-    
-    {!volunteersLoading && (
-      <VolunteersTable
-        volunteers={volunteers}
-        onAssign={assignVolunteer} 
-      />
-    )}
-  </div>
-)}
+              {volunteersLoading && <p>Synchronisation des profils...</p>}
+
+              {!volunteersLoading && (
+                <VolunteersTable
+                  volunteers={volunteers}
+                  onAssign={assignVolunteer}
+                />
+              )}
+            </div>
+          )}
 
           {/* NOTIFICATIONS */}
           {activeTab === 'notifications' && (
@@ -470,7 +586,7 @@ function ResponsablePage() {
                         style={{
                           background:
                             !selectedGroup ||
-                            !notificationForm.label.trim()
+                              !notificationForm.label.trim()
                               ? '#9ca3af'
                               : '#10b981',
                           color: 'white',
@@ -480,7 +596,7 @@ function ResponsablePage() {
                           fontWeight: '600',
                           cursor:
                             !selectedGroup ||
-                            !notificationForm.label.trim()
+                              !notificationForm.label.trim()
                               ? 'not-allowed'
                               : 'pointer',
                         }}
